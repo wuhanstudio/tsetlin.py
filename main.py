@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
 from tsetlin.utils.booleanize import boolieanize
@@ -39,9 +40,23 @@ X_bool = boolieanize_features(X, X_mean, X_std)
 X_train, X_test, y_train, y_test = train_test_split(X_bool, y, test_size=0.2, random_state=0)
 
 tsetlin = Tsetlin(N_feature=X_train.shape[1], N_class=3, N_clause=50)
-tsetlin.fit(X_train, y_train, epochs=200)
 
+# tsetlin.fit(X_train, y_train, epochs=200)
 y_pred = tsetlin.predict(X_test)
 accuracy = np.sum(y_pred == y_test) / len(y_test)
 
+epochs = 200
+for epoch in range(epochs):
+    print(f"Epoch {epoch+1}/{epochs}")
+    pbar = tqdm(enumerate(X_train), total=len(X_train))
+    for i, x in pbar:
+        tsetlin.step(x, y_train[i])
+
+        y_pred = tsetlin.predict(X_test)
+        accuracy = np.sum(y_pred == y_test) / len(y_test)
+
+        pbar.desc = f'Accuracy {accuracy * 100:.2f}%'
+    pbar.close()
+
+# tsetlin.fit(X_train, y_train, epochs=200)
 print(f"Test Accuracy: {accuracy * 100:.2f}%")
