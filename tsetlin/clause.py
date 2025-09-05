@@ -21,10 +21,10 @@ class Clause:
     def evaluate(self, X):
         output = 1
         for i in range(self.N_feature):
-            if self.automata[2 * i].action() == 0 and X[i] == 1:
+            if (self.automata[2 * i].action() == 1) and (X[i] == 0):
                 output = 0
                 break
-            if self.automata[2 * i + 1].action() == 0 and X[i] == 0:
+            if (self.automata[2 * i + 1].action() == 1) and (X[i] == 1):
                 output = 0
                 break
         return output
