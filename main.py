@@ -1,24 +1,13 @@
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+
 from sklearn.model_selection import train_test_split
 
-from tsetlin.utils.booleanize import boolieanize
-from tsetlin.tsetlin import Tsetlin
+from tsetlin import Tsetlin
+from tsetlin.utils import booleanize_features
 
-def boolieanize_features(X, mean, std):
-    # Normalization to [0, 255]
-    X = (X - mean) / std
-    X = np.array(X * 255, dtype=np.uint8)
-
-    X_bool = []
-    for x_features in X:
-        bool_features = []
-        for x in x_features:
-            bool_features.append(boolieanize(x))
-        X_bool.append(np.concatenate(bool_features))
-
-    return np.array(X_bool, dtype=bool)
+EPOCHS = 10
 
 iris = pd.read_csv("iris.csv")
 
@@ -35,19 +24,18 @@ X = iris[["sepal_length", "sepal_width", "petal_length", "petal_width"]].to_nump
 X_mean = np.mean(X, axis=0)
 X_std = np.std(X, axis=0)
 
-X_bool = boolieanize_features(X, X_mean, X_std)
+X_bool = booleanize_features(X, X_mean, X_std)
 
+# Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X_bool, y, test_size=0.2, random_state=0)
 
 tsetlin = Tsetlin(N_feature=X_train.shape[1], N_class=3, N_clause=50)
 
-# tsetlin.fit(X_train, y_train, epochs=200)
 y_pred = tsetlin.predict(X_test)
 accuracy = np.sum(y_pred == y_test) / len(y_test)
 
-epochs = 200
-for epoch in range(epochs):
-    print(f"Epoch {epoch+1}/{epochs}")
+for epoch in range(EPOCHS):
+    print(f"[Epoch {epoch+1}/{EPOCHS}] Accuracy: {accuracy * 100:.2f}%")
     pbar = tqdm(enumerate(X_train), total=len(X_train))
     for i, x in pbar:
         tsetlin.step(x, y_train[i])
@@ -58,5 +46,5 @@ for epoch in range(epochs):
         pbar.desc = f'Accuracy {accuracy * 100:.2f}%'
     pbar.close()
 
-# tsetlin.fit(X_train, y_train, epochs=200)
+# tsetlin.fit(X_train, y_train, epochs=EPOCHS)
 print(f"Test Accuracy: {accuracy * 100:.2f}%")

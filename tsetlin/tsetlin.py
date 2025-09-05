@@ -37,7 +37,7 @@ class Tsetlin:
                 clause_output = clause.evaluate(X)
                 clause.update(X, 1 if c == target else 0, clause_output)
 
-    def fit(self, X, y, epochs=1):
+    def fit(self, X, y, epochs=10):
         for epoch in tqdm(range(epochs)):
             for i in range(len(X)):
                 self.step(X[i], y[i])

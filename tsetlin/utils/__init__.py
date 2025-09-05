@@ -1,1 +1,1 @@
-from tsetlin.utils import booleanize
+from tsetlin.utils.booleanize import booleanize, booleanize_features
