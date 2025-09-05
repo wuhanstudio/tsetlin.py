@@ -38,9 +38,11 @@ class Clause:
             if clause_output == 0:
                 for i in range(self.N_feature):
                     # TODO: Do we need rand() twice
-                    if np.random.rand() <= s1:
-                        self.automata[2 * i].penalty()
-                        self.automata[2 * i + 1].penalty()
+                    if X[i] != self.automata[2 * i].action():
+                        # TODO: Different from the paper
+                        if np.random.rand() <= s1:
+                            self.automata[2 * i].penalty()
+                            self.automata[2 * i + 1].reward()
 
             if clause_output == 1:
                 for i in range(self.N_feature):

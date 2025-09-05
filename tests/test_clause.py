@@ -44,11 +44,12 @@ class TestClause(unittest.TestCase):
         clause.automata[3].state = 7  # Include (NOT feature 1)
 
         X = np.array([1, 0])  # Feature vector
-        target = 1           # Target class
-        clause_output = clause.evaluate(X)  # Should be 1
 
+        clause_output = clause.evaluate(X)  # Should be 1
+        self.assertEqual(clause_output, 1)
+        
         # Update the clause based on the input and target
-        clause.update(X, target, clause_output, s=3)
+        clause.update(X, 1, clause_output, s=3)
 
         # Check if automata states have been updated correctly
         self.assertTrue(clause.automata[0].state >= 6)

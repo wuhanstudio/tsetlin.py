@@ -38,14 +38,17 @@ class Tsetlin:
             class_sum = 0
             for clause in self.clauses[c]:
                 class_sum += clause.evaluate(X)
+
+            class_sum = np.clip(class_sum, -T, T)
+
             c1 = (T - class_sum) / (2 * T)
             c2 = (T + class_sum) / (2 * T)
 
             for clause in self.clauses[c]:
                 clause_output = clause.evaluate(X)
-                if y_target == c and (np.random.rand() <= c1):
+                if (y_target == c) and (np.random.rand() <= c1):
                     clause.update(X, 1, clause_output, s=s)
-                elif y_target != c and (np.random.rand() <= c2):
+                elif (y_target != c) and (np.random.rand() <= c2):
                     clause.update(X, 0, clause_output, s=s)
 
     def fit(self, X, y, epochs=10):
