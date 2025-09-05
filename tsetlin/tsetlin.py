@@ -25,17 +25,28 @@ class Tsetlin:
             votes = np.zeros(self.num_classes)
             for c in range(self.num_classes):
                 for j, clause in enumerate(self.clauses[c]):
-                    sign = 1 - 2 * (j % 2)  # Odd clauses are negative
+                    sign = 1
+                    # sign = 1 - 2 * (j % 2)  # Odd clauses are negative
+                    
                     clause_output = clause.evaluate(X[i])
                     votes[c] += (clause_output * sign)
             y_pred.append(np.argmax(votes))
         return np.array(y_pred)
 
-    def step(self, X, target):
+    def step(self, X, y_target, T=15, s=3):
         for c in range(self.num_classes):
+            class_sum = 0
+            for clause in self.clauses[c]:
+                class_sum += clause.evaluate(X)
+            c1 = (T - class_sum) / (2 * T)
+            c2 = (T + class_sum) / (2 * T)
+
             for clause in self.clauses[c]:
                 clause_output = clause.evaluate(X)
-                clause.update(X, 1 if c == target else 0, clause_output)
+                if y_target == c and (np.random.rand() <= c1):
+                    clause.update(X, 1, clause_output, s=s)
+                elif y_target != c and (np.random.rand() <= c2):
+                    clause.update(X, 0, clause_output, s=s)
 
     def fit(self, X, y, epochs=10):
         for epoch in tqdm(range(epochs)):

@@ -14,8 +14,9 @@ class Clause:
 
         # Randomly initialize automata states middle_state + {0,1}
         for i in range(self.N_feature):
-            self.automata[2 * i].state = N_state // 2 + np.random.choice([0, 1])
-            self.automata[2 * i + 1].state = N_state // 2 + np.random.choice([0, 1])
+            choice = np.random.choice([0, 1])
+            self.automata[2 * i].state = N_state // 2 + choice
+            self.automata[2 * i + 1].state = N_state // 2 + (1 - choice)
 
     def evaluate(self, X):
         output = 1
@@ -28,30 +29,34 @@ class Clause:
                 break
         return output
 
-    def update(self, X, target, clause_output, s=3):
+    def update(self, X, match_target, clause_output, s=3):
         # Type I Feedback (Recognize patterns)
-        if target == 1 and clause_output == 1:
-            for i in range(self.N_feature):
-                if X[i] == 1:
-                    if np.random.rand() <= (s - 1) / s:
-                        self.automata[2 * i].reward()
-                    if np.random.rand() <= 1 / s:
-                        self.automata[2 * i + 1].penalty()
-                else:
-                    if np.random.rand() <= (s - 1) / s:
-                        self.automata[2 * i + 1].reward()
-                    if np.random.rand() <= 1 / s:
+        if match_target == 1:
+            s1 = 1 / s
+            s2 = (s - 1) / s
+
+            if clause_output == 0:
+                for i in range(self.N_feature):
+                    # TODO: Do we need rand() twice
+                    if np.random.rand() <= s1:
                         self.automata[2 * i].penalty()
-        # Type II Feedback (Erase patterns)
-        elif target == 0 and clause_output == 1:
-            for i in range(self.N_feature):
-                if X[i] == 1:
-                    if np.random.rand() <= 1 / s:
-                        self.automata[2 * i].penalty()
-                    if np.random.rand() <= (s - 1) / s:
-                        self.automata[2 * i + 1].reward()
-                else:
-                    if np.random.rand() <= 1 / s:
                         self.automata[2 * i + 1].penalty()
-                    if np.random.rand() <= (s - 1) / s:
-                        self.automata[2 * i].reward()
+
+            if clause_output == 1:
+                for i in range(self.N_feature):
+                    if X[i] != self.automata[2 * i].action():
+                        if np.random.rand() <= s1:
+                            self.automata[2 * i].penalty()
+                            self.automata[2 * i + 1].reward()
+                    else:
+                        if np.random.rand() <= s2:
+                            self.automata[2 * i].reward()
+                            self.automata[2 * i + 1].penalty()
+
+        # Type II Feedback (Erase / Forget patterns)
+        elif match_target == 0 and clause_output == 1:
+            for i in range(self.N_feature):
+                if X[i] != self.automata[2 * i].action():
+                    self.automata[2 * i].penalty()
+                else:
+                    self.automata[2 * i + 1].penalty()
