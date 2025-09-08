@@ -32,7 +32,7 @@ class Clause:
                 break
         return output
 
-    def update(self, X, match_target, clause_output, s=3):
+    def update(self, X, match_target, clause_output, s):
         # Type I Feedback (Recognize patterns)
         # Want clause_output to be 1
         if match_target == 1:

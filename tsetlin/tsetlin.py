@@ -51,9 +51,11 @@ class Tsetlin:
         # Update clauses for class c
         for i in range(int(self.n_clauses / 2)):
             if (np.random.rand() <= c1):
+                # Type I Feedback
                 self.pos_clauses[y_target][i].update(X, 1, self.pos_clauses[y_target][i].evaluate(X), s=s)
             if (np.random.rand() <= c1):
-                self.neg_clauses[y_target][i].update(X, 1, self.neg_clauses[y_target][i].evaluate(X), s=s)
+                # Type II Feedback
+                self.neg_clauses[y_target][i].update(X, 0, self.neg_clauses[y_target][i].evaluate(X), s=s)
 
         # Pair 2: Non-target classes
         other_class = random.choice([x for x in range(self.n_classes) if x != y_target])
@@ -70,9 +72,11 @@ class Tsetlin:
         c2 = (T + class_sum) / (2 * T)
         for i in range(int(self.n_clauses / 2)):
             if (np.random.rand() <= c2):
+                # Type II Feedback
                 self.pos_clauses[other_class][i].update(X, 0, self.pos_clauses[other_class][i].evaluate(X), s=s)
             if (np.random.rand() <= c2):
-                self.neg_clauses[other_class][i].update(X, 0, self.neg_clauses[other_class][i].evaluate(X), s=s)
+                # Type I Feedback
+                self.neg_clauses[other_class][i].update(X, 1, self.neg_clauses[other_class][i].evaluate(X), s=s)
 
     def fit(self, X, y, T, s, epochs=10):
         for epoch in tqdm(range(epochs)):
