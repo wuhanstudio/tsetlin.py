@@ -59,24 +59,18 @@ class Clause:
             if clause_output == 1:
                 for i in range(self.N_feature):
                     # Positive literal X
-                    if X[i] != self.p_automata[i].action():
-                        # B = 0
-                        if np.random.rand() <= s1:
-                            self.p_automata[i].penalty()
-                    else:
-                        # B = 1
+                    if X[i] == 1:
                         if np.random.rand() <= s2:
                             self.p_automata[i].reward()
-
-                    # Negative literal NOT X
-                    if X[i] != (1 - self.n_automata[i].action()):
-                        # B = 0
                         if np.random.rand() <= s1:
                             self.n_automata[i].penalty()
-                    else:
-                        # B = 1
+
+                    # Negative literal NOT X
+                    elif X[i] == 0:
                         if np.random.rand() <= s2:
                             self.n_automata[i].reward()
+                        if np.random.rand() <= s1:
+                            self.p_automata[i].penalty()
 
         # Type II Feedback (Reject Patterns)
         else:

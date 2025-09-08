@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from tsetlin import Tsetlin
 from tsetlin.utils import booleanize_features
 
-EPOCHS = 50
+EPOCHS = 10
 
 iris = pd.read_csv("iris.csv")
 
