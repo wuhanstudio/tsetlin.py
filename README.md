@@ -2,6 +2,15 @@
 
 > The Iris Dataset
 
+- Import / output model
+- Print clause output & class sum
+- Vanilla TM / coelesed weighted TM (same states with different weights)
+
+- PYNQ / HLS (C++) Vitis AI / AXI Lite
+- **Unsupervised TM** & Adaptive Reasonance (ICML Jan then Journal)
+
+- Tracing / Debugging Strategy / ISTM August
+
 ## Quick Start
 
 Using `pip`:
