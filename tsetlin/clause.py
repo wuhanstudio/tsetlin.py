@@ -9,56 +9,75 @@ class Clause:
         self.N_feature = N_feature
         self.N_literals = 2 * N_feature
 
-        # For each feature, initialize two automata (X and NOT X)
-        self.automata = [Automaton(N_state, -1) for _ in range(2 * N_feature)]
-
+        # Positive and Negative Automata for each feature
+        self.p_automata = [Automaton(N_state, -1) for _ in range(N_feature)]
+        self.n_automata = [Automaton(N_state, -1) for _ in range(N_feature)]
+        
         # Randomly initialize automata states middle_state + {0,1}
         for i in range(self.N_feature):
             choice = np.random.choice([0, 1])
-            self.automata[2 * i].state = N_state // 2 + choice
-            self.automata[2 * i + 1].state = N_state // 2 + (1 - choice)
+            self.p_automata[i].state = N_state // 2 + choice
+            self.n_automata[i].state = N_state // 2 + (1 - choice)
 
     def evaluate(self, X):
         output = 1
         for i in range(self.N_feature):
-            if self.automata[2 * i].action() == 0 and X[i] == 1:
+            # Include positive literal,  but feature is 0
+            if self.p_automata[i].action() == 1 and X[i] == 0:
                 output = 0
                 break
-            if self.automata[2 * i + 1].action() == 0 and X[i] == 0:
+            # Include negative literal, but feature is 1
+            if self.n_automata[i].action() == 1 and X[i] == 1:
                 output = 0
                 break
         return output
 
     def update(self, X, match_target, clause_output, s=3):
         # Type I Feedback (Recognize patterns)
+        # Want clause_output to be 1
         if match_target == 1:
             s1 = 1 / s
             s2 = (s - 1) / s
 
+            # Erase Pattern
+            # Reduce the number of included literals
             if clause_output == 0:
                 for i in range(self.N_feature):
-                    # TODO: Do we need rand() twice
-                    if X[i] != self.automata[2 * i].action():
-                        # TODO: Different from the paper
-                        if np.random.rand() <= s1:
-                            self.automata[2 * i].penalty()
-                            self.automata[2 * i + 1].reward()
+                    if np.random.rand() <= s1:
+                        self.p_automata[i].penalty()
+                        self.n_automata[i].penalty()
 
+            # Recognize Pattern
+            # Increase the number of included literals
             if clause_output == 1:
                 for i in range(self.N_feature):
-                    if X[i] != self.automata[2 * i].action():
+                    # Positive literal X
+                    if X[i] != self.p_automata[i].action():
+                        # B = 0
                         if np.random.rand() <= s1:
-                            self.automata[2 * i].penalty()
-                            self.automata[2 * i + 1].reward()
+                            self.p_automata[i].penalty()
                     else:
+                        # B = 1
                         if np.random.rand() <= s2:
-                            self.automata[2 * i].reward()
-                            self.automata[2 * i + 1].penalty()
+                            self.p_automata[i].reward()
 
-        # Type II Feedback (Erase / Forget patterns)
+                    # Negative literal NOT X
+                    if X[i] != (1 - self.n_automata[i].action()):
+                        # B = 0
+                        if np.random.rand() <= s1:
+                            self.n_automata[i].penalty()
+                    else:
+                        # B = 1
+                        if np.random.rand() <= s2:
+                            self.n_automata[i].reward()
+
+        # Type II Feedback (Reject Patterns)
+        # Want clause_output to be 0
         elif match_target == 0 and clause_output == 1:
             for i in range(self.N_feature):
-                if X[i] != self.automata[2 * i].action():
-                    self.automata[2 * i].penalty()
-                else:
-                    self.automata[2 * i + 1].penalty()
+                # Positive literal X
+                if X[i] != self.p_automata[i].action():
+                    self.p_automata[i].reward()
+                # Negative literal NOT X
+                if X[i] != (1 - self.n_automata[i].action()):
+                    self.n_automata[i].reward()

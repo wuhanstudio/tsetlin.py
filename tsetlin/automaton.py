@@ -5,9 +5,9 @@ class Automaton:
 
         self.N_state = N_state
         self.state = state
-
+    
     def action(self):
-        return 1 if self.state > (self.N_state // 2) else 0
+        return 1 if (self.state > (self.N_state // 2)) else 0
 
     def reward(self):
         if self.state < self.N_state:
