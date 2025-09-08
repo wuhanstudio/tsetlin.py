@@ -1,11 +1,10 @@
-import numpy as np
 class Automaton:
     def __init__(self, N_state, state):
         assert N_state % 2 == 0, "N_state must be even"
 
         self.N_state = N_state
         self.state = state
-    
+
     def action(self):
         return 1 if (self.state > (self.N_state // 2)) else 0
 
