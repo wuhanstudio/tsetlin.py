@@ -38,7 +38,7 @@ for epoch in range(EPOCHS):
     print(f"[Epoch {epoch+1}/{EPOCHS}] Accuracy: {accuracy * 100:.2f}%")
     pbar = tqdm(enumerate(X_train), total=len(X_train))
     for i, x in pbar:
-        tsetlin.step(x, y_train[i])
+        tsetlin.step(x, y_train[i], T=15, s=7.5)
 
         y_pred = tsetlin.predict(X_test)
         accuracy = np.sum(y_pred == y_test) / len(y_test)
@@ -46,5 +46,5 @@ for epoch in range(EPOCHS):
         pbar.desc = f'Accuracy {accuracy * 100:.2f}%'
     pbar.close()
 
-# tsetlin.fit(X_train, y_train, epochs=EPOCHS)
+# tsetlin.fit(X_train, y_train, T=15, s=3, epochs=EPOCHS)
 print(f"Test Accuracy: {accuracy * 100:.2f}%")

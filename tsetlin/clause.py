@@ -73,11 +73,14 @@ class Clause:
 
         # Type II Feedback (Reject Patterns)
         # Want clause_output to be 0
-        elif match_target == 0 and clause_output == 1:
-            for i in range(self.N_feature):
-                # Positive literal X
-                if X[i] != self.p_automata[i].action():
-                    self.p_automata[i].reward()
-                # Negative literal NOT X
-                if X[i] != (1 - self.n_automata[i].action()):
-                    self.n_automata[i].reward()
+        elif match_target == 0:
+            if (clause_output == 1):
+                for i in range(self.N_feature):
+                    # Positive literal X
+                    if X[i] != self.p_automata[i].action():
+                        # B = 0 
+                        self.p_automata[i].reward()
+                    # Negative literal NOT X
+                    if X[i] != (1 - self.n_automata[i].action()):
+                        # B = 0 
+                        self.n_automata[i].reward()

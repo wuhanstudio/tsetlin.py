@@ -33,30 +33,48 @@ class Tsetlin:
             y_pred.append(np.argmax(votes))
         return np.array(y_pred)
 
-    def step(self, X, y_target, T=15, s=3):
-        # TODO: Pair-wise learning
-        for c in range(self.n_classes):
-            class_sum = 0
-            for i in range(int(self.n_clauses / 2)):
-                class_sum += self.pos_clauses[c][i].evaluate(X)
-                class_sum -= self.neg_clauses[c][i].evaluate(X)
+    def step(self, X, y_target, T, s):
+        # Pair-wise learning
 
-            # Clamp class_sum to [-T, T]
-            class_sum = np.clip(class_sum, -T, T)
+        # Pair 1: Target class
+        class_sum = 0
+        for i in range(int(self.n_clauses / 2)):
+            class_sum += self.pos_clauses[y_target][i].evaluate(X)
+            class_sum -= self.neg_clauses[y_target][i].evaluate(X)
 
-            c1 = (T - class_sum) / (2 * T)
-            c2 = (T + class_sum) / (2 * T)
+        # Clamp class_sum to [-T, T]
+        class_sum = np.clip(class_sum, -T, T)
+    
+        # Calculate probabilities
+        c1 = (T - class_sum) / (2 * T)
 
-            # Update clauses for class c
-            for i in range(int(self.n_clauses / 2)):
-                if (y_target == c) and (np.random.rand() <= c1):
-                    self.pos_clauses[c][i].update(X, 1, self.pos_clauses[c][i].evaluate(X), s=s)
-                    self.neg_clauses[c][i].update(X, 1, self.neg_clauses[c][i].evaluate(X), s=s)
-                elif (y_target != c) and (np.random.rand() <= c2):
-                    self.pos_clauses[c][i].update(X, 0, self.pos_clauses[c][i].evaluate(X), s=s)
-                    self.neg_clauses[c][i].update(X, 0, self.neg_clauses[c][i].evaluate(X), s=s)
+        # Update clauses for class c
+        for i in range(int(self.n_clauses / 2)):
+            if (np.random.rand() <= c1):
+                self.pos_clauses[y_target][i].update(X, 1, self.pos_clauses[y_target][i].evaluate(X), s=s)
+            if (np.random.rand() <= c1):
+                self.neg_clauses[y_target][i].update(X, 1, self.neg_clauses[y_target][i].evaluate(X), s=s)
 
-    def fit(self, X, y, epochs=10):
+        # Pair 2: Non-target classes
+        other_class = random.choice([x for x in range(self.n_classes) if x != y_target])
+
+        class_sum = 0
+        for i in range(int(self.n_clauses / 2)):
+            class_sum += self.pos_clauses[other_class][i].evaluate(X)
+            class_sum -= self.neg_clauses[other_class][i].evaluate(X)
+
+        # Clamp class_sum to [-T, T]
+        class_sum = np.clip(class_sum, -T, T)
+
+        # Calculate probabilities
+        c2 = (T + class_sum) / (2 * T)
+        for i in range(int(self.n_clauses / 2)):
+            if (np.random.rand() <= c2):
+                self.pos_clauses[other_class][i].update(X, 0, self.pos_clauses[other_class][i].evaluate(X), s=s)
+            if (np.random.rand() <= c2):
+                self.neg_clauses[other_class][i].update(X, 0, self.neg_clauses[other_class][i].evaluate(X), s=s)
+
+    def fit(self, X, y, T, s, epochs=10):
         for epoch in tqdm(range(epochs)):
             for i in range(len(X)):
-                self.step(X[i], y[i])
+                self.step(X[i], y[i], T=T, s=s)
