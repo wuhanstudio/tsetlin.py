@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from tsetlin import Tsetlin
 from tsetlin.utils import booleanize_features
 
-EPOCHS = 10
+EPOCHS = 50
 
 iris = pd.read_csv("iris.csv")
 
@@ -35,9 +35,9 @@ y_pred = tsetlin.predict(X_test)
 accuracy = np.sum(y_pred == y_test) / len(y_test)
 
 for epoch in range(EPOCHS):
-    print(f"[Epoch {epoch+1}/{EPOCHS}] Accuracy: {accuracy * 100:.2f}%")
+    print(f"[Epoch {epoch+1}/{EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
     for i in tqdm(range(len(X_train))):
-        tsetlin.step(X_train[i], y_train[i], T=15, s=7.5)
+        tsetlin.step(X_train[i], y_train[i], T=30, s=6)
 
     y_pred = tsetlin.predict(X_train)
     accuracy = np.sum(y_pred == y_train) / len(y_train)

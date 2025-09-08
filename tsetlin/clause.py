@@ -22,10 +22,11 @@ class Clause:
     def evaluate(self, X):
         output = 1
         for i in range(self.N_feature):
-            # Include positive literal,  but feature is 0
+            # Include positive literal, but feature is 0
             if self.p_automata[i].action() == 1 and X[i] == 0:
                 output = 0
                 break
+            # TODO: This may be redundant
             # Include negative literal, but feature is 1
             if self.n_automata[i].action() == 1 and X[i] == 1:
                 output = 0
@@ -33,9 +34,14 @@ class Clause:
         return output
 
     def update(self, X, match_target, clause_output, s):
-        # Type I Feedback (Recognize patterns)
-        # Want clause_output to be 1
+        # TODO: Sanity Check: Both X and NOT X should not be included
+        # if np.sum([ (self.p_automata[i].action()) & (self.n_automata[i].action()) for i in range(self.N_feature)]) > 0:
+            # print([ (float(self.p_automata[i].state), float(self.n_automata[i].state)) for i in range(self.N_feature)])
+            # raise Exception("Error: Both X and Not X are included")
+
+        # Type I Feedback (Support patterns)
         if match_target == 1:
+            # Want clause_output to be 1
             s1 = 1 / s
             s2 = (s - 1) / s
 
@@ -45,6 +51,7 @@ class Clause:
                 for i in range(self.N_feature):
                     if np.random.rand() <= s1:
                         self.p_automata[i].penalty()
+                    if np.random.rand() <= s1:
                         self.n_automata[i].penalty()
 
             # Recognize Pattern
@@ -72,15 +79,12 @@ class Clause:
                             self.n_automata[i].reward()
 
         # Type II Feedback (Reject Patterns)
-        # Want clause_output to be 0
-        elif match_target == 0:
+        else:
+            # Want clause_output to be 0
             if (clause_output == 1):
                 for i in range(self.N_feature):
-                    # Positive literal X
+                    # TODO: Only reward negative automata
+                    # B = 0 
                     if X[i] != self.p_automata[i].action():
-                        # B = 0 
-                        self.p_automata[i].reward()
-                    # Negative literal NOT X
-                    if X[i] != (1 - self.n_automata[i].action()):
-                        # B = 0 
-                        self.n_automata[i].reward()
+                        if self.n_automata[i].action() == 0:
+                            self.n_automata[i].reward()

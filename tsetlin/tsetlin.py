@@ -48,13 +48,13 @@ class Tsetlin:
         # Calculate probabilities
         c1 = (T - class_sum) / (2 * T)
 
-        # Update clauses for class c
+        # Update clauses for the target class
         for i in range(int(self.n_clauses / 2)):
             if (np.random.rand() <= c1):
-                # Type I Feedback
+                # Positive Clause: Type I Feedback
                 self.pos_clauses[y_target][i].update(X, 1, self.pos_clauses[y_target][i].evaluate(X), s=s)
             if (np.random.rand() <= c1):
-                # Type II Feedback
+                # Negative Clause: Type II Feedback
                 self.neg_clauses[y_target][i].update(X, 0, self.neg_clauses[y_target][i].evaluate(X), s=s)
 
         # Pair 2: Non-target classes
@@ -72,13 +72,13 @@ class Tsetlin:
         c2 = (T + class_sum) / (2 * T)
         for i in range(int(self.n_clauses / 2)):
             if (np.random.rand() <= c2):
-                # Type II Feedback
+                # Positive Clause: Type II Feedback
                 self.pos_clauses[other_class][i].update(X, 0, self.pos_clauses[other_class][i].evaluate(X), s=s)
             if (np.random.rand() <= c2):
-                # Type I Feedback
+                # Negative Clause: Type I Feedback
                 self.neg_clauses[other_class][i].update(X, 1, self.neg_clauses[other_class][i].evaluate(X), s=s)
 
-    def fit(self, X, y, T, s, epochs=10):
-        for epoch in tqdm(range(epochs)):
+    def fit(self, X, y, T, s, epochs):
+        for epoch in tqdm(range(epochs), desc="Training Epochs"):
             for i in range(len(X)):
                 self.step(X[i], y[i], T=T, s=s)
