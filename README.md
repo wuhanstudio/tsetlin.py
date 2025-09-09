@@ -2,14 +2,14 @@
 
 > The Iris Dataset
 
-- Import / output model
-- Print clause output & class sum
-- Vanilla TM / coelesed weighted TM (same states with different weights)
+## Todo List
 
-- PYNQ / HLS (C++) Vitis AI / AXI Lite
-- **Unsupervised TM** & Adaptive Reasonance (ICML Jan then Journal)
+[&nbsp; ] Debug: Import / Save model  
+[&nbsp; ] Debug: Print clause output & class sum
 
-- Tracing / Debugging Strategy / ISTM August
+[&nbsp; ] Improve: **Unsupervised TM**  
+[&nbsp; ] Improve: Coelesed weighted TM (same states with different weights)  
+[&nbsp; ] Improve: Adaptive Reasonance  
 
 ## Quick Start
 
