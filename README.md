@@ -11,7 +11,7 @@
 [&nbsp; ] Improve: [Coelesed TM with Clause Sharing](https://arxiv.org/abs/2108.07594)  
 [&nbsp; ] Improve: [Adaptive Reasonance](https://arxiv.org/pdf/1905.11437)  
 
-## Quick Start
+## Prerequisites
 
 Using `pip`:
 ```
@@ -25,8 +25,18 @@ $ pipenv install
 $ pipenv shell
 ```
 
+## Quick Start
+
+Train and save the model
+
 ```
 $ python main.py
+```
+
+Using `streamlit` as the UI:
+
+```
+$python main_ui.py
 ```
 
 ## Pytest

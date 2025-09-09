@@ -10,6 +10,9 @@ scikit-learn = "*"
 pytest = "*"
 tqdm = "*"
 protobuf = "*"
+streamlit = "*"
+stqdm = "*"
+matplotlib = "*"
 
 [dev-packages]
 
