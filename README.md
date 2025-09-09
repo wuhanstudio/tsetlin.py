@@ -8,8 +8,8 @@
 [&nbsp; ] Debug: Print clause output & class sum
 
 [&nbsp; ] Improve: **Unsupervised TM**  
-[&nbsp; ] Improve: Coelesed weighted TM (same states with different weights)  
-[&nbsp; ] Improve: Adaptive Reasonance  
+[&nbsp; ] Improve: [Coelesed TM with Clause Sharing](https://arxiv.org/abs/2108.07594)  
+[&nbsp; ] Improve: [Adaptive Reasonance](https://arxiv.org/pdf/1905.11437)  
 
 ## Quick Start
 
