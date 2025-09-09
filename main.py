@@ -67,7 +67,7 @@ print("Model loaded from tsetlin_model.pb")
 print()
 
 # Evaluate the loaded model
-y_pred = n_tsetlin.predict(X_test)
+n_y_pred = n_tsetlin.predict(X_test)
 accuracy = np.sum(y_pred == y_test) / len(y_test)
 
 print(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")

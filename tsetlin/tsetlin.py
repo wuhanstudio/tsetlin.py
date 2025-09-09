@@ -101,16 +101,16 @@ class Tsetlin:
             pos_clauses = []
             neg_clauses = []
             for j in range(self.n_clauses // 2):
-                p_clause = tm.clauses[i * self.n_clauses + j]
-                n_clause = tm.clauses[i * self.n_clauses + j + 1]   
+                p_clause = tm.clauses[i * self.n_clauses + j * 2]
+                n_clause = tm.clauses[i * self.n_clauses + j * 2 + 1]
 
                 # Set positive clauses
-                pos_clause = Clause(self.n_features, N_state=self.n_states)
+                pos_clause = Clause(self.n_features, self.n_states)
                 pos_clause.set_state(np.array(p_clause.data).astype(np.uint32))
                 pos_clauses.append(pos_clause)
 
                 # Set negative clauses
-                neg_clause = Clause(self.n_features, N_state=self.n_states)
+                neg_clause = Clause(self.n_features, self.n_states)
                 neg_clause.set_state(np.array(n_clause.data).astype(np.uint32))
                 neg_clauses.append(neg_clause)
 
