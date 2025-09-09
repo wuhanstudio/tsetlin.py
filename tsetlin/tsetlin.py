@@ -22,8 +22,9 @@ class Tsetlin:
             self.pos_clauses.append([Clause(N_feature, N_state=N_state) for _ in range(int(N_clause / 2))])
             self.neg_clauses.append([Clause(N_feature, N_state=N_state) for _ in range(int(N_clause / 2))])
 
-    def predict(self, X):
+    def predict(self, X, return_votes=False):
         y_pred = []
+        votes_list = np.zeros((self.n_classes, len(X)))
         for i in range(len(X)):
             votes = np.zeros(self.n_classes)
             for c in range(self.n_classes):
@@ -31,7 +32,12 @@ class Tsetlin:
                     votes[c] += self.pos_clauses[c][j].evaluate(X[i])
                     votes[c] -= self.neg_clauses[c][j].evaluate(X[i])
             y_pred.append(np.argmax(votes))
-        return np.array(y_pred)
+            votes_list[:, i] = votes
+
+        if return_votes:
+            return votes_list
+        else:
+            return np.array(y_pred)
 
     def step(self, X, y_target, T, s):
         # Pair-wise learning

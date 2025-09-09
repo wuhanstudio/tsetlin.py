@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 
 iris = pd.read_csv("iris.csv")
 
+iris_class = ['setosa', 'versicolor', 'virginica']
 iris['label'] = iris['species'].map({
     'setosa': 0,
     'versicolor': 1,
@@ -49,35 +50,7 @@ def iris_data():
     st.dataframe(iris)
 
 @st.fragment
-def evaluate():
-    st.title("Model Evaluation")
-
-    # Read model file
-    f_model = st.file_uploader("Choose model file", type=["pb"])
-
-    if f_model is not None:
-        if not os.path.exists("temp"):
-            os.makedirs("temp")
-        f_mrc_path = os.path.join("temp", f_model.name)
-        with open(f_mrc_path, "wb") as f:
-            f.write(f_model.getvalue())
-
-        n_tsetlin = Tsetlin.load_model(f"temp/{f_model.name}")
-
-        # Evaluate the loaded model
-        y_pred = n_tsetlin.predict(X_test)
-        accuracy = np.sum(y_pred == y_test) / len(y_test)
-
-        st.write(f"Test Accuracy: {accuracy * 100:.2f}%")
-
-
-if __name__ == "__main__":
-    st.header("Tsetlin Machine", divider=True)
-
-    iris_data()
-
-    st.divider()
-
+def train():
     st.title("Model Training")
 
     st.number_input("Number of Epochs", min_value=1, max_value=100, value=10, step=1, key="n_epochs")
@@ -118,6 +91,58 @@ if __name__ == "__main__":
         st.write(f"Test Accuracy: {accuracy * 100:.2f}%")
 
         draw_download_button("tsetlin_model.pb", "Download model", "application/pb")
+
+
+@st.fragment
+def evaluate():
+    st.title("Model Evaluation")
+
+    # Read model file
+    f_model = st.file_uploader("Choose model file", type=["pb"])
+
+    if f_model is not None:
+        # Save the uploaded model to a temporary file
+        if not os.path.exists("temp"):
+            os.makedirs("temp")
+        f_mrc_path = os.path.join("temp", f_model.name)
+        with open(f_mrc_path, "wb") as f:
+            f.write(f_model.getvalue())
+
+        n_tsetlin = Tsetlin.load_model(f"temp/{f_model.name}")
+
+        # Evaluate the loaded model
+        votes = n_tsetlin.predict(X_test, return_votes=True)
+        y_pred = []
+        for i in range(X_test.shape[0]):
+            y_pred.append(np.argmax(votes[:, i]))
+
+        accuracy = np.sum(y_pred == y_test) / len(y_test)
+        st.write(f"Test Accuracy: {accuracy * 100:.2f}%")
+
+        result = pd.DataFrame({
+            "True Label": [iris_class[label] for label in y_test],
+            "Predicted Label": [iris_class[label] for label in y_pred],
+            "Correct": [true == pred for true, pred in zip(y_test, y_pred)]
+        })
+        st.dataframe(result)
+
+        index = st.number_input("The index of the testing data", 0)
+
+        st.write(f"True Label: {iris_class[y_test[index]]} - Predicted Label: {iris_class[y_pred[index]]}")
+
+        fig, ax = plt.subplots()
+        ax.bar(["Setosa", "Versicolor", "Virginica"], votes[:, index])
+        st.pyplot(fig)
+   
+
+if __name__ == "__main__":
+    st.header("Tsetlin Machine", divider=True)
+
+    iris_data()
+
+    st.divider()
+
+    train()
 
     st.divider()
 
