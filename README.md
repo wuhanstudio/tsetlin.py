@@ -5,7 +5,7 @@
 ## Todo List
 
 [●] Debug: Import / Save model  
-[&nbsp; ] Debug: Print clause output & class sum
+[●] Debug: Print clause output & class sum
 
 [&nbsp; ] Improve: **Unsupervised TM**  
 [&nbsp; ] Improve: [Coelesed TM with Clause Sharing](https://arxiv.org/abs/2108.07594)  
@@ -38,6 +38,8 @@ Using `streamlit` as the UI:
 ```
 $python main_ui.py
 ```
+
+![](demo.png)
 
 ## Pytest
 
