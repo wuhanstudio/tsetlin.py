@@ -83,39 +83,43 @@ class Tsetlin:
             for i in range(len(X)):
                 self.step(X[i], y[i], T=T, s=s)
 
-    def load_model(self, path):
+    @staticmethod
+    def load_model(path):
         import tsetlin_pb2
         tm = tsetlin_pb2.Tsetlin()
 
         with open(path, "rb") as f:
             tm.ParseFromString(f.read())
 
-        self.n_classes = tm.n_class
-        self.n_features = tm.n_feature
-        self.n_clauses = tm.n_clause
-        self.n_states = tm.n_state
-    
-        self.pos_clauses = []
-        self.neg_clauses = []
-        for i in range(self.n_classes):
+        tm_model = Tsetlin(N_feature=tm.n_feature, N_class=tm.n_class, N_clause=tm.n_clause, N_state=tm.n_state)
+        tm_model.n_classes = tm.n_class
+        tm_model.n_features = tm.n_feature
+        tm_model.n_clauses = tm.n_clause
+        tm_model.n_states = tm.n_state
+
+        tm_model.pos_clauses = []
+        tm_model.neg_clauses = []
+        for i in range(tm_model.n_classes):
             pos_clauses = []
             neg_clauses = []
-            for j in range(self.n_clauses // 2):
-                p_clause = tm.clauses[i * self.n_clauses + j * 2]
-                n_clause = tm.clauses[i * self.n_clauses + j * 2 + 1]
+            for j in range(tm_model.n_clauses // 2):
+                p_clause = tm.clauses[i * tm_model.n_clauses + j * 2]
+                n_clause = tm.clauses[i * tm_model.n_clauses + j * 2 + 1]
 
                 # Set positive clauses
-                pos_clause = Clause(self.n_features, self.n_states)
+                pos_clause = Clause(tm_model.n_features, tm_model.n_states)
                 pos_clause.set_state(np.array(p_clause.data).astype(np.uint32))
                 pos_clauses.append(pos_clause)
 
                 # Set negative clauses
-                neg_clause = Clause(self.n_features, self.n_states)
+                neg_clause = Clause(tm_model.n_features, tm_model.n_states)
                 neg_clause.set_state(np.array(n_clause.data).astype(np.uint32))
                 neg_clauses.append(neg_clause)
 
-            self.pos_clauses.append(pos_clauses)
-            self.neg_clauses.append(neg_clauses)
+            tm_model.pos_clauses.append(pos_clauses)
+            tm_model.neg_clauses.append(neg_clauses)
+
+        return tm_model
 
     def save_model(self, path, type="training"):
         import tsetlin_pb2

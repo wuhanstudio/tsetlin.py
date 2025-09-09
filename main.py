@@ -60,8 +60,7 @@ tsetlin.save_model("tsetlin_model.pb", type="training")
 print("Model saved to tsetlin_model.pb")
 
 # Load the model
-n_tsetlin = Tsetlin(N_feature=X_train.shape[1], N_class=3, N_clause=N_CLAUSE, N_state=N_STATE)
-n_tsetlin.load_model("tsetlin_model.pb")
+n_tsetlin = Tsetlin.load_model("tsetlin_model.pb")
 print("Model loaded from tsetlin_model.pb")
 
 print()

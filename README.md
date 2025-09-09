@@ -4,7 +4,7 @@
 
 ## Todo List
 
-[&nbsp; ] Debug: Import / Save model  
+[●] Debug: Import / Save model  
 [&nbsp; ] Debug: Print clause output & class sum
 
 [&nbsp; ] Improve: **Unsupervised TM**  
