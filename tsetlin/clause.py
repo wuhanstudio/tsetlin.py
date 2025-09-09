@@ -91,3 +91,19 @@ class Clause:
                         self.p_automata[i].reward()
                     elif (self.n_automata[i].action() == 0) and (X[i] == 1):
                         self.n_automata[i].reward()
+    
+    def set_state(self, states):
+        assert states.dtype == np.uint32, "States must be of type np.int32"
+
+        assert states.ndim  == 1
+        assert states.shape[0] == 2 * self.N_feature, "States must be a 1D array with shape (2 * N_features,)"
+
+        for i in range(self.N_feature):
+            self.p_automata[i].state = states[i]
+            self.n_automata[i].state = states[i + self.N_feature]
+
+    def get_state(self):
+        p_states = [a.state for a in self.p_automata]
+        n_states = [a.state for a in self.n_automata]
+
+        return np.array(p_states + n_states, dtype=np.uint32)

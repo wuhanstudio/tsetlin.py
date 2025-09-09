@@ -5,7 +5,7 @@ from tqdm import tqdm
 from tsetlin.clause import Clause
 
 class Tsetlin:
-    def __init__(self, N_feature, N_class, N_clause=100, N_state=400):
+    def __init__(self, N_feature, N_class, N_clause, N_state):
 
         assert N_state % 2 == 0, "N_state must be even"
         assert N_clause % 2 == 0, "N_clause must be even"
@@ -82,3 +82,77 @@ class Tsetlin:
         for epoch in tqdm(range(epochs), desc="Training Epochs"):
             for i in range(len(X)):
                 self.step(X[i], y[i], T=T, s=s)
+
+    def load_model(self, path):
+        import tsetlin_pb2
+        tm = tsetlin_pb2.Tsetlin()
+
+        with open(path, "rb") as f:
+            tm.ParseFromString(f.read())
+
+        self.n_classes = tm.n_class
+        self.n_features = tm.n_feature
+        self.n_clauses = tm.n_clause
+        self.n_states = tm.n_state
+    
+        self.pos_clauses = []
+        self.neg_clauses = []
+        for i in range(self.n_classes):
+            pos_clauses = []
+            neg_clauses = []
+            for j in range(self.n_clauses // 2):
+                p_clause = tm.clauses[i * self.n_clauses + j]
+                n_clause = tm.clauses[i * self.n_clauses + j + 1]   
+
+                # Set positive clauses
+                pos_clause = Clause(self.n_features, N_state=self.n_states)
+                pos_clause.set_state(np.array(p_clause.data).astype(np.uint32))
+                pos_clauses.append(pos_clause)
+
+                # Set negative clauses
+                neg_clause = Clause(self.n_features, N_state=self.n_states)
+                neg_clause.set_state(np.array(n_clause.data).astype(np.uint32))
+                neg_clauses.append(neg_clause)
+
+            self.pos_clauses.append(pos_clauses)
+            self.neg_clauses.append(neg_clauses)
+
+    def save_model(self, path, type="training"):
+        import tsetlin_pb2
+        tm = tsetlin_pb2.Tsetlin()
+
+        tm.n_class = self.n_classes
+        tm.n_feature = self.n_features
+        tm.n_clause = self.n_clauses
+        tm.n_state = self.n_states
+
+        if type not in ["training", "inference"]:
+            raise ValueError("type must be either 'training' or 'inference'")
+        
+        if type == "training":
+            tm.model_type = tsetlin_pb2.Tsetlin.ModelType.TRAINING
+        else:
+            tm.model_type = tsetlin_pb2.Tsetlin.ModelType.INFERENCE
+
+        for i in range(self.n_classes):
+            for j in range(self.n_clauses // 2):
+                # Positive clauses
+                pos_c = tsetlin_pb2.Clause()
+                pos_c.n_feature = self.n_features
+                pos_c.n_state = self.n_states
+
+                pos_c.data.extend(self.pos_clauses[i][j].get_state().flatten().tolist())
+
+                tm.clauses.append(pos_c)
+
+                # Negative clauses
+                neg_c = tsetlin_pb2.Clause()
+                neg_c.n_feature = self.n_features
+                neg_c.n_state = self.n_states
+
+                neg_c.data.extend(self.neg_clauses[i][j].get_state().flatten().tolist())
+
+                tm.clauses.append(neg_c)
+
+        with open(path, "wb") as f:
+            f.write(tm.SerializeToString())

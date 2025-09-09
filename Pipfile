@@ -9,6 +9,7 @@ pandas = "*"
 scikit-learn = "*"
 pytest = "*"
 tqdm = "*"
+protobuf = "*"
 
 [dev-packages]
 
