@@ -1,4 +1,4 @@
-import time
+import os
 import numpy as np
 import pandas as pd
 
@@ -56,8 +56,13 @@ def evaluate():
     f_model = st.file_uploader("Choose model file", type=["pb"])
 
     if f_model is not None:
-        f_model_path = f_model.name
-        n_tsetlin = Tsetlin.load_model(f_model_path)
+        if not os.path.exists("temp"):
+            os.makedirs("temp")
+        f_mrc_path = os.path.join("temp", f_model.name)
+        with open(f_mrc_path, "wb") as f:
+            f.write(f_model.getvalue())
+
+        n_tsetlin = Tsetlin.load_model(f"temp/{f_model.name}")
 
         # Evaluate the loaded model
         y_pred = n_tsetlin.predict(X_test)
