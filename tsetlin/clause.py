@@ -77,8 +77,17 @@ class Clause:
             # Want clause_output to be 0
             if (clause_output == 1):
                 for i in range(self.N_feature):
-                    # TODO: Only reward negative automata
-                    # B = 0 
-                    if X[i] != self.p_automata[i].action():
-                        if self.n_automata[i].action() == 0:
-                            self.n_automata[i].reward()
+                    # TODO
+                    # My implementation: Easier to overfit
+                    # if (self.p_automata[i].action() == 0) and (X[i] == 0): 
+                    #         self.p_automata[i].reward()
+                    #         self.n_automata[i].reward()
+                    # elif (self.n_automata[i].action() == 0) and (X[i] == 1):
+                    #         self.p_automata[i].reward()
+                    #         self.n_automata[i].reward()
+
+                    # Original paper implementation
+                    if (self.p_automata[i].action() == 0) and (X[i] == 0): 
+                        self.p_automata[i].reward()
+                    elif (self.n_automata[i].action() == 0) and (X[i] == 1):
+                        self.n_automata[i].reward()
