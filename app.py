@@ -123,7 +123,7 @@ def evaluate():
         })
         st.dataframe(result)
 
-        index = st.number_input("The index of the testing data", 0)
+        index = st.number_input("The index of the testing data", 0, len(X_test) - 1)
 
         st.write(f"True Label: {iris_class[y_test[index]]} - Predicted Label: {iris_class[y_pred[index]]}")
 
