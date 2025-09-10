@@ -1,16 +1,15 @@
 import os
-import numpy as np
+
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 import streamlit as st
 from stqdm import stqdm
-
-from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 from tsetlin import Tsetlin
 from tsetlin.utils import booleanize_features
-
-import matplotlib.pyplot as plt
+from tsetlin.utils import mean, std, argmax
 
 iris = pd.read_csv("iris.csv")
 
@@ -25,8 +24,8 @@ y = iris["label"].to_numpy()
 X = iris[["sepal_length", "sepal_width", "petal_length", "petal_width"]].to_numpy()
 
 # Normalization
-X_mean = np.mean(X, axis=0)
-X_std = np.std(X, axis=0)
+X_mean = mean(X)
+X_std = std(X)
 
 X_bool = booleanize_features(X, X_mean, X_std)
 
@@ -72,7 +71,7 @@ def train():
                 tsetlin.step(X_train[i], y_train[i], T=30, s=6)
 
             y_pred = tsetlin.predict(X_train)
-            accuracy = np.sum(y_pred == y_train) / len(y_train)
+            accuracy = sum(y_pred == y_train) / len(y_train)
 
             accuracy_list.append(accuracy * 100)
 
@@ -86,7 +85,7 @@ def train():
 
         # Final evaluation
         y_pred = tsetlin.predict(X_test)
-        accuracy = np.sum(y_pred == y_test) / len(y_test)
+        accuracy = sum(y_pred == y_test) / len(y_test)
 
         st.write(f"Test Accuracy: {accuracy * 100:.2f}%")
 
@@ -114,9 +113,9 @@ def evaluate():
         votes = n_tsetlin.predict(X_test, return_votes=True)
         y_pred = []
         for i in range(X_test.shape[0]):
-            y_pred.append(np.argmax(votes[:, i]))
+            y_pred.append(argmax(votes[:, i]))
 
-        accuracy = np.sum(y_pred == y_test) / len(y_test)
+        accuracy = sum(y_pred == y_test) / len(y_test)
         st.write(f"Test Accuracy: {accuracy * 100:.2f}%")
 
         result = pd.DataFrame({

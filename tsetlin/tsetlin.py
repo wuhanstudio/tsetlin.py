@@ -1,8 +1,8 @@
 import random
-import numpy as np
 from tqdm import tqdm
 
 from tsetlin.clause import Clause
+from tsetlin.utils import argmax, clip, to_int32
 
 class Tsetlin:
     def __init__(self, N_feature, N_class, N_clause, N_state):
@@ -24,20 +24,20 @@ class Tsetlin:
 
     def predict(self, X, return_votes=False):
         y_pred = []
-        votes_list = np.zeros((self.n_classes, len(X)))
+        votes_list = []
         for i in range(len(X)):
-            votes = np.zeros(self.n_classes)
+            votes = [0] * self.n_classes
             for c in range(self.n_classes):
                 for j in range(int(self.n_clauses / 2)):
                     votes[c] += self.pos_clauses[c][j].evaluate(X[i])
                     votes[c] -= self.neg_clauses[c][j].evaluate(X[i])
-            y_pred.append(np.argmax(votes))
-            votes_list[:, i] = votes
+            y_pred.append(argmax(votes))
+            votes_list.append(votes)
 
         if return_votes:
             return votes_list
         else:
-            return np.array(y_pred)
+            return y_pred
 
     def step(self, X, y_target, T, s):
         # Pair-wise learning
@@ -49,17 +49,17 @@ class Tsetlin:
             class_sum -= self.neg_clauses[y_target][i].evaluate(X)
 
         # Clamp class_sum to [-T, T]
-        class_sum = np.clip(class_sum, -T, T)
+        class_sum = clip(class_sum, -T, T)
     
         # Calculate probabilities
         c1 = (T - class_sum) / (2 * T)
 
         # Update clauses for the target class
         for i in range(int(self.n_clauses / 2)):
-            if (np.random.rand() <= c1):
+            if (random.random() <= c1):
                 # Positive Clause: Type I Feedback
                 self.pos_clauses[y_target][i].update(X, 1, self.pos_clauses[y_target][i].evaluate(X), s=s)
-            if (np.random.rand() <= c1):
+            if (random.random() <= c1):
                 # Negative Clause: Type II Feedback
                 self.neg_clauses[y_target][i].update(X, 0, self.neg_clauses[y_target][i].evaluate(X), s=s)
 
@@ -72,15 +72,15 @@ class Tsetlin:
             class_sum -= self.neg_clauses[other_class][i].evaluate(X)
 
         # Clamp class_sum to [-T, T]
-        class_sum = np.clip(class_sum, -T, T)
+        class_sum = clip(class_sum, -T, T)
 
         # Calculate probabilities
         c2 = (T + class_sum) / (2 * T)
         for i in range(int(self.n_clauses / 2)):
-            if (np.random.rand() <= c2):
+            if (random.random() <= c2):
                 # Positive Clause: Type II Feedback
                 self.pos_clauses[other_class][i].update(X, 0, self.pos_clauses[other_class][i].evaluate(X), s=s)
-            if (np.random.rand() <= c2):
+            if (random.random() <= c2):
                 # Negative Clause: Type I Feedback
                 self.neg_clauses[other_class][i].update(X, 1, self.neg_clauses[other_class][i].evaluate(X), s=s)
 
@@ -114,12 +114,12 @@ class Tsetlin:
 
                 # Set positive clauses
                 pos_clause = Clause(tm_model.n_features, tm_model.n_states)
-                pos_clause.set_state(np.array(p_clause.data).astype(np.uint32))
+                pos_clause.set_state(p_clause.data)
                 pos_clauses.append(pos_clause)
 
                 # Set negative clauses
                 neg_clause = Clause(tm_model.n_features, tm_model.n_states)
-                neg_clause.set_state(np.array(n_clause.data).astype(np.uint32))
+                neg_clause.set_state(n_clause.data)
                 neg_clauses.append(neg_clause)
 
             tm_model.pos_clauses.append(pos_clauses)
@@ -151,7 +151,7 @@ class Tsetlin:
                 pos_c.n_feature = self.n_features
                 pos_c.n_state = self.n_states
 
-                pos_c.data.extend(self.pos_clauses[i][j].get_state().flatten().tolist())
+                pos_c.data.extend([to_int32(x) for x in self.pos_clauses[i][j].get_state()])
 
                 tm.clauses.append(pos_c)
 
@@ -160,7 +160,7 @@ class Tsetlin:
                 neg_c.n_feature = self.n_features
                 neg_c.n_state = self.n_states
 
-                neg_c.data.extend(self.neg_clauses[i][j].get_state().flatten().tolist())
+                neg_c.data.extend([to_int32(x) for x in self.neg_clauses[i][j].get_state()])
 
                 tm.clauses.append(neg_c)
 
