@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 from tsetlin import Tsetlin
 from tsetlin.utils import booleanize_features
-from tsetlin.utils import mean, std, argmax
+from tsetlin.utils import mean, std
 
 iris = pd.read_csv("iris.csv")
 
@@ -85,10 +85,11 @@ def train():
 
         # Final evaluation
         y_pred = tsetlin.predict(X_test)
-        accuracy = sum(y_pred == y_test) / len(y_test)
+        accuracy = (sum(y_pred == y_test) / len(y_test))
 
         st.write(f"Test Accuracy: {accuracy * 100:.2f}%")
 
+        tsetlin.save_model("tsetlin_model.pb", type="training")
         draw_download_button("tsetlin_model.pb", "Download model", "application/pb")
 
 
@@ -103,19 +104,16 @@ def evaluate():
         # Save the uploaded model to a temporary file
         if not os.path.exists("temp"):
             os.makedirs("temp")
-        f_mrc_path = os.path.join("temp", f_model.name)
-        with open(f_mrc_path, "wb") as f:
+        f_model_path = os.path.join("temp", f_model.name)
+        with open(f_model_path, "wb") as f:
             f.write(f_model.getvalue())
 
         n_tsetlin = Tsetlin.load_model(f"temp/{f_model.name}")
 
         # Evaluate the loaded model
-        votes = n_tsetlin.predict(X_test, return_votes=True)
-        y_pred = []
-        for i in range(X_test.shape[0]):
-            y_pred.append(argmax(votes[:, i]))
+        y_pred, votes = n_tsetlin.predict(X_test, return_votes=True)
 
-        accuracy = sum(y_pred == y_test) / len(y_test)
+        accuracy = (sum(y_pred == y_test) / len(y_test))
         st.write(f"Test Accuracy: {accuracy * 100:.2f}%")
 
         result = pd.DataFrame({
@@ -130,7 +128,7 @@ def evaluate():
         st.write(f"True Label: {iris_class[y_test[index]]} - Predicted Label: {iris_class[y_pred[index]]}")
 
         fig, ax = plt.subplots()
-        ax.bar(["Setosa", "Versicolor", "Virginica"], votes[:, index])
+        ax.bar(["Setosa", "Versicolor", "Virginica"], votes[index])
         st.pyplot(fig)
    
 

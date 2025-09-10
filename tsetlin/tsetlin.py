@@ -35,7 +35,7 @@ class Tsetlin:
             votes_list.append(votes)
 
         if return_votes:
-            return votes_list
+            return y_pred, votes_list
         else:
             return y_pred
 
