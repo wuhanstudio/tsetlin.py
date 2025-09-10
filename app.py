@@ -62,7 +62,7 @@ def train():
     N_STATE  = st.session_state.n_state
 
     if st.button("Train Model", type="primary"):
-        tsetlin = Tsetlin(N_feature=X_train.shape[1], N_class=3, N_clause=N_CLAUSE, N_state=N_STATE)
+        tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=3, N_clause=N_CLAUSE, N_state=N_STATE)
 
         accuracy_list = []
 

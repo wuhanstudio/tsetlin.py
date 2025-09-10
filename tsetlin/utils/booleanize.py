@@ -1,24 +1,18 @@
-import numpy as np
-
 def booleanize(x):
     # Get binary as string of 8 bits
     binary_str = format(x, '08b')
 
     # Convert each character ('0' or '1') to boolean
-    x = [bit == '1' for bit in binary_str]
-
-    return np.array(x, dtype=bool)
+    return [bit == '1' for bit in binary_str]
 
 def booleanize_features(X, mean, std):
     # Normalization to [0, 255]
     X = (X - mean) / std
-    X = np.array(X * 255, dtype=np.uint8)
+    X = [[int(x* 255) for x in row] for row in X]
 
     X_bool = []
     for x_features in X:
-        bool_features = []
-        for x in x_features:
-            bool_features.append(booleanize(x))
-        X_bool.append(np.concatenate(bool_features))
+        bool_features = [booleanize(x) for x in x_features]
+        X_bool.append([b for row in bool_features for b in row])
 
-    return np.array(X_bool, dtype=bool)
+    return X_bool
