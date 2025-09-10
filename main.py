@@ -68,6 +68,6 @@ print()
 
 # Evaluate the loaded model
 n_y_pred = n_tsetlin.predict(X_test)
-accuracy = sum(y_pred == y_test) / len(y_test)
+accuracy = sum(n_y_pred == y_test) / len(y_test)
 
 print(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
