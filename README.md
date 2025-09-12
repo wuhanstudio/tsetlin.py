@@ -5,11 +5,18 @@
 ## Todo List
 
 [●] Debug: Import / Save model  
-[●] Debug: Print clause output & class sum
-
-[&nbsp; ] Improve: **Unsupervised TM**  
-[&nbsp; ] Improve: [Coelesed TM with Clause Sharing](https://arxiv.org/abs/2108.07594)  
+[●] Debug: Print clause output & class sum  
+<br/>
+[&nbsp; ] MNIST Dataset  
+[&nbsp; ] Interface for quick benchmark (T, s, confusion matrix)  
+[&nbsp; ] Hypterparameter (Optuna)  
+[&nbsp; ] Different booleanize methods  
+<br/>
+[&nbsp; ] **Unsupervised Learning (TM) using ART (Keep the TM structure)**  
+<br/>
 [&nbsp; ] Improve: [Adaptive Reasonance](https://arxiv.org/pdf/1905.11437)  
+<br/>
+[&nbsp; ] Improve: [Coelesed TM with Clause Sharing](https://arxiv.org/abs/2108.07594)  
 
 ## Prerequisites
 
