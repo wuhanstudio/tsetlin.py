@@ -15,7 +15,6 @@
 [&nbsp; ] **Unsupervised Learning (TM) using ART (Keep the TM structure)**  
 <br/>
 [&nbsp; ] Improve: [Adaptive Reasonance](https://arxiv.org/pdf/1905.11437)  
-<br/>
 [&nbsp; ] Improve: [Coelesed TM with Clause Sharing](https://arxiv.org/abs/2108.07594)  
 
 ## Prerequisites
