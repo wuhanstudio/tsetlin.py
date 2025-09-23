@@ -9,7 +9,7 @@
 <br/>
 [●] MNIST Dataset  
 [●] Interface for quick benchmark (T, s, confusion matrix)  
-[&nbsp; ] Hypterparameter (Optuna)  
+[&nbsp; ] Hyper-parameter (Optuna)  
 [●] Different booleanize methods  
 <br/>
 [&nbsp; ] **Unsupervised Learning (TM) using ART (Keep the TM structure)**  
