@@ -7,10 +7,10 @@
 [●] Debug: Import / Save model  
 [●] Debug: Print clause output & class sum  
 <br/>
-[&nbsp; ] MNIST Dataset  
-[&nbsp; ] Interface for quick benchmark (T, s, confusion matrix)  
+[●] MNIST Dataset  
+[●] Interface for quick benchmark (T, s, confusion matrix)  
 [&nbsp; ] Hypterparameter (Optuna)  
-[&nbsp; ] Different booleanize methods  
+[●] Different booleanize methods  
 <br/>
 [&nbsp; ] **Unsupervised Learning (TM) using ART (Keep the TM structure)**  
 <br/>

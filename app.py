@@ -1,6 +1,7 @@
 import os
 
 import pandas as pd
+from sklearn import metrics
 from sklearn.model_selection import train_test_split
 
 import streamlit as st
@@ -10,6 +11,8 @@ import matplotlib.pyplot as plt
 from tsetlin import Tsetlin
 from tsetlin.utils import booleanize_features
 from tsetlin.utils import mean, std
+
+from pretty_confusion_matrix import pp_matrix
 
 @st.fragment
 def draw_download_button(filename, label, mime):
@@ -113,6 +116,10 @@ def evaluate(X_test, y_test, iris_class):
 
         accuracy = (sum(y_pred == y_test) / len(y_test))
         st.write(f"Test Accuracy: {accuracy * 100:.2f}%")
+
+        cm = metrics.confusion_matrix(y_test, y_pred)
+        df_cm = pd.DataFrame(cm, index=range(0, 3), columns=range(0, 3))
+        st.pyplot(pp_matrix(df_cm))
 
         result = pd.DataFrame({
             "True Label": [iris_class[label] for label in y_test],

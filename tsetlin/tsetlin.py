@@ -25,7 +25,7 @@ class Tsetlin:
     def predict(self, X, return_votes=False):
         y_pred = []
         votes_list = []
-        for i in range(len(X)):
+        for i in tqdm(range(len(X)), desc="Evaluating"):
             votes = [0] * self.n_classes
             for c in range(self.n_classes):
                 for j in range(int(self.n_clauses / 2)):

@@ -14,6 +14,8 @@ streamlit = "*"
 stqdm = "*"
 matplotlib = "*"
 loguru = "*"
+mnist = "*"
+pretty-confusion-matrix = "*"
 
 [dev-packages]
 

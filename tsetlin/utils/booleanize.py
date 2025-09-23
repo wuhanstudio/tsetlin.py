@@ -1,4 +1,5 @@
 
+from tqdm import tqdm
 from scipy.stats import norm
 
 def booleanize(x: float, num_bits: int=8) -> list[bool]:
@@ -29,7 +30,7 @@ def booleanize_features(X, mean, std, num_bits: int=8):
     # X = [[int(x* 255) for x in row] for row in X]
 
     X_bool = []
-    for x_features in X:
+    for x_features in tqdm(X, desc="Booleanizing features"):
         bool_features = [booleanize(x, num_bits=num_bits) for x in x_features]
         X_bool.append([b for row in bool_features for b in row])
 
