@@ -13,6 +13,7 @@ protobuf = "*"
 streamlit = "*"
 stqdm = "*"
 matplotlib = "*"
+loguru = "*"
 
 [dev-packages]
 

@@ -11,27 +11,6 @@ from tsetlin import Tsetlin
 from tsetlin.utils import booleanize_features
 from tsetlin.utils import mean, std
 
-iris = pd.read_csv("iris.csv")
-
-iris_class = ['setosa', 'versicolor', 'virginica']
-iris['label'] = iris['species'].map({
-    'setosa': 0,
-    'versicolor': 1,
-    'virginica': 2
-})
-
-y = iris["label"].to_numpy()
-X = iris[["sepal_length", "sepal_width", "petal_length", "petal_width"]].to_numpy()
-
-# Normalization
-X_mean = mean(X)
-X_std = std(X)
-
-X_bool = booleanize_features(X, X_mean, X_std)
-
-# Train-test split
-X_train, X_test, y_train, y_test = train_test_split(X_bool, y, test_size=0.2, random_state=0)
-
 @st.fragment
 def draw_download_button(filename, label, mime):
     with open(filename, "rb") as file:
@@ -45,11 +24,25 @@ def draw_download_button(filename, label, mime):
 
 @st.fragment
 def iris_data():
+    iris = pd.read_csv("iris.csv")
+
+    iris_class = ['setosa', 'versicolor', 'virginica']
+    iris['label'] = iris['species'].map({
+        'setosa': 0,
+        'versicolor': 1,
+        'virginica': 2
+    })
+
+    y = iris["label"].to_numpy()
+    X = iris[["sepal_length", "sepal_width", "petal_length", "petal_width"]].to_numpy()
+
     st.title("Iris Dataset")
     st.dataframe(iris)
 
+    return X, y, iris_class
+
 @st.fragment
-def train():
+def train(X_train, y_train):
     st.title("Model Training")
 
     st.number_input("Number of Epochs", min_value=1, max_value=100, value=10, step=1, key="n_epochs")
@@ -92,10 +85,11 @@ def train():
         tsetlin.save_model("tsetlin_model.pb", type="training")
         draw_download_button("tsetlin_model.pb", "Download model", "application/pb")
 
-
 @st.fragment
-def evaluate():
+def evaluate(X_test, y_test, iris_class):
     st.title("Model Evaluation")
+
+    st.write(f"Number of Features: {len(X_test[0])}")
 
     # Read model file
     f_model = st.file_uploader("Choose model file", type=["pb"])
@@ -109,6 +103,10 @@ def evaluate():
             f.write(f_model.getvalue())
 
         n_tsetlin = Tsetlin.load_model(f"temp/{f_model.name}")
+
+        if n_tsetlin.n_features != len(X_test[0]):
+            st.error(f"Uploaded model feature size {n_tsetlin.n_features} does not match test feature size {len(X_test[0])}")
+            return
 
         # Evaluate the loaded model
         y_pred, votes = n_tsetlin.predict(X_test, return_votes=True)
@@ -135,12 +133,27 @@ def evaluate():
 if __name__ == "__main__":
     st.header("Tsetlin Machine", divider=True)
 
-    iris_data()
+    X, y, iris_class = iris_data()
+
+    st.title("Data Preprocessing")
+    st.write("Booleanization of features")
+
+    st.selectbox("Number of Bits", options=[1, 2, 4, 8], index=3, key="n_bit")
+    N_BIT = st.session_state.n_bit
+
+    # Normalization
+    X_mean = mean(X)
+    X_std = std(X)
+
+    X_bool = booleanize_features(X, X_mean, X_std, num_bits=N_BIT)
+
+    # Train-test split
+    X_train, X_test, y_train, y_test = train_test_split(X_bool, y, test_size=0.2, random_state=0)
+
+    st.divider()
+    
+    train(X_train, y_train)
 
     st.divider()
 
-    train()
-
-    st.divider()
-
-    evaluate()
+    evaluate(X_test, y_test, iris_class)

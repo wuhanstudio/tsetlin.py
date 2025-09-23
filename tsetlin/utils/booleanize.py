@@ -1,18 +1,36 @@
-def booleanize(x):
-    # Get binary as string of 8 bits
-    binary_str = format(x, '08b')
 
-    # Convert each character ('0' or '1') to boolean
-    return [bit == '1' for bit in binary_str]
+from scipy.stats import norm
 
-def booleanize_features(X, mean, std):
+def booleanize(x: float, num_bits: int=8) -> list[bool]:
+    if not (0.0 <= x <= 1.0):
+        raise ValueError("Input float must be between 0.0 and 1.0")
+
+    if num_bits not in {1, 2, 4, 8}:
+        raise ValueError("num_bits must be 1, 2, 4, or 8")
+
+    # Scale float to integer range
+    max_val = (1 << num_bits) - 1  # 2^num_bits - 1
+
+    # !Important: Round to even to avoid bias
+    int_val = round(x * max_val)
+
+    # Convert to boolean list
+    bool_bits = [(int_val >> i) & 1 == 1 for i in reversed(range(num_bits))]
+    return bool_bits
+
+def booleanize_features(X, mean, std, num_bits: int=8):
     # Normalization to [0, 255]
     X = (X - mean) / std
-    X = [[int(x* 255) for x in row] for row in X]
+
+    # Map to [0, 1] using CDF of standard normal distribution
+    X = norm.cdf(X)  
+
+    # Mistake: Shouldn't do this
+    # X = [[int(x* 255) for x in row] for row in X]
 
     X_bool = []
     for x_features in X:
-        bool_features = [booleanize(x) for x in x_features]
+        bool_features = [booleanize(x, num_bits=num_bits) for x in x_features]
         X_bool.append([b for row in bool_features for b in row])
 
     return X_bool
