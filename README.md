@@ -47,6 +47,16 @@ $python main_ui.py
 
 ![](demo.png)
 
+## Optuna
+
+```
+$ python main.py --optuna
+```
+
+```
+$ optuna-dashboard sqlite:///db.sqlite3
+```
+
 ## Pytest
 
 ```

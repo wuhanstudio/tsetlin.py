@@ -76,10 +76,18 @@ if __name__ == "__main__":
         import optuna
         
         # Create a new study.
-        study = optuna.create_study()  
+        # study = optuna.create_study()
+  
+        study = optuna.create_study(
+            storage="sqlite:///db.sqlite3",  # Specify the storage URL here.
+            study_name="tsetlin-machine-iris",
+            load_if_exists="True"
+        )
         
         # Invoke optimization of the objective function.
-        study.optimize(objective, n_trials=20)  
+        study.optimize(objective, n_trials=100)  
+
+        print(f"Best value: {study.best_value} (params: {study.best_params})")
     else:
         N_CLAUSE = args.n_clause
         N_STATE  = args.n_state

@@ -17,6 +17,7 @@ loguru = "*"
 mnist = "*"
 pretty-confusion-matrix = "*"
 optuna = "*"
+optuna-dashboard = "*"
 
 [dev-packages]
 
