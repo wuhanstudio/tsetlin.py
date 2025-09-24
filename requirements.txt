@@ -10,3 +10,4 @@ matplotlib
 loguru
 mnist
 pretty-confusion-matrix
+optuna
