@@ -3,3 +3,10 @@ pandas
 scikit-learn
 pytest
 tqdm
+protobuf
+streamlit
+stqdm
+matplotlib
+loguru
+mnist
+pretty-confusion-matrix

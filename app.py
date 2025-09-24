@@ -53,6 +53,9 @@ def train(X_train, y_train):
     st.number_input("Number of Clauses", min_value=10, max_value=1000, value=100, step=10, key="n_clause")
     st.number_input("Number of States", min_value=100, max_value=1000, value=400, step=10, key="n_state")
 
+    T = st.slider("Hyperparameter T", 0, N_STATE, 20)
+    s = st.slider("Hyperparameter s", 0.0, 10.0, 3.5, 0.1)
+
     EPOCHS = st.session_state.n_epochs
     N_CLAUSE = st.session_state.n_clause
     N_STATE  = st.session_state.n_state
@@ -64,7 +67,7 @@ def train(X_train, y_train):
 
         for epoch in stqdm(range(EPOCHS), desc=f"Training Model"):
             for i in range(len(X_train)):
-                tsetlin.step(X_train[i], y_train[i], T=30, s=6)
+                tsetlin.step(X_train[i], y_train[i], T=T, s=s)
 
             y_pred = tsetlin.predict(X_train)
             accuracy = sum(y_pred == y_train) / len(y_train)
