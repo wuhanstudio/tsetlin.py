@@ -18,6 +18,7 @@ mnist = "*"
 pretty-confusion-matrix = "*"
 optuna = "*"
 optuna-dashboard = "*"
+tmu = {git = "https://github.com/cair/tmu.git"}
 
 [dev-packages]
 

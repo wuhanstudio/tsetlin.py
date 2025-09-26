@@ -9,10 +9,12 @@
 <br/>
 [●] MNIST Dataset  
 [●] Interface for quick benchmark (T, s, confusion matrix)  
-[●] Hyper-parameter (Optuna)  
 [●] Different booleanize methods  
 <br/>
-[&nbsp; ] **Unsupervised Learning (TM) using ART (Keep the TM structure)**  
+[●] TMU Library  
+[●] Hyper-parameter (Optuna)  
+<br/>
+[&nbsp; ] **Unsupervised TM using ART**  
 <br/>
 [&nbsp; ] Improve: [Adaptive Reasonance](https://arxiv.org/pdf/1905.11437)  
 [&nbsp; ] Improve: [Coelesed TM with Clause Sharing](https://arxiv.org/abs/2108.07594)  

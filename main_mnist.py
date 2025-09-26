@@ -52,10 +52,10 @@ if __name__ == "__main__":
     X_test = X_test.reshape((X_test.shape[0], -1)).astype(float) / 255.0
 
     # Normalization (not really needed for MNIST)
-    X_train = booleanize_features(X_train[0:1000], 0, 1.0, num_bits=N_BIT)
-    X_test = booleanize_features(X_test[0:100], 0, 1.0, num_bits=N_BIT)
-    y_train = y_train[0:1000]
-    y_test = y_test[0:100]
+    X_train = booleanize_features(X_train, 0, 1.0, num_bits=N_BIT)
+    X_test = booleanize_features(X_test, 0, 1.0, num_bits=N_BIT)
+    y_train = y_train
+    y_test = y_test
 
     tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=10, N_clause=N_CLAUSE, N_state=N_STATE)
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         for i in tqdm(range(len(X_train))):
             tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s)
 
-        y_pred = tsetlin.predict(X_train)
+        # y_pred = tsetlin.predict(X_train)
         accuracy = sum(y_pred == y_train) / len(y_train)
 
     # tsetlin.fit(X_train, y_train, T=15, s=3, epochs=EPOCHS)
