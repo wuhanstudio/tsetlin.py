@@ -1,13 +1,11 @@
-import logging
 import argparse
+from loguru import logger
 
 import numpy as np
 
 from tmu.data import MNIST
 from tmu.models.classification.vanilla_classifier import TMClassifier
 from tmu.tools import BenchmarkTimer
-
-_LOGGER = logging.getLogger(__name__)
 
 def metrics(args):
     return dict(
@@ -32,15 +30,18 @@ def main(args):
         seed=42,
     )
 
-    _LOGGER.info(f"Running {TMClassifier} for {args.epochs}")
+    logger.info(f"Running {TMClassifier} for {args.epochs}")
+    logger.debug(f"Input shape of training images: {data['x_train'][:args.train].shape}")
+    logger.debug(f"Input shape of testing images: {data['x_test'][:args.test].shape}")
+
     for epoch in range(args.epochs):
         benchmark_total = BenchmarkTimer(logger=None, text="Epoch Time")
         with benchmark_total:
             benchmark1 = BenchmarkTimer(logger=None, text="Training Time")
             with benchmark1:
                 res = tm.fit(
-                    data["x_train"].astype(np.uint32),
-                    data["y_train"].astype(np.uint32),
+                    data["x_train"][:args.train].astype(np.uint32),
+                    data["y_train"][:args.train].astype(np.uint32),
                     metrics=["update_p"],
                 )
 
@@ -49,11 +50,11 @@ def main(args):
             # print(res)
             benchmark2 = BenchmarkTimer(logger=None, text="Testing Time")
             with benchmark2:
-                result = 100 * (tm.predict(data["x_test"]) == data["y_test"]).mean()
+                result = 100 * (tm.predict(data["x_test"][:args.test]) == data["y_test"][:args.test]).mean()
                 experiment_results["accuracy"].append(result)
             experiment_results["test_time"].append(benchmark2.elapsed())
 
-            _LOGGER.info(f"Epoch: {epoch + 1}, Accuracy: {result:.2f}, Training Time: {benchmark1.elapsed():.2f}s, "
+            logger.info(f"Epoch: {epoch + 1}, Accuracy: {result:.2f}, Training Time: {benchmark1.elapsed():.2f}s, "
                          f"Testing Time: {benchmark2.elapsed():.2f}s")
 
     return experiment_results
@@ -67,6 +68,8 @@ def default_args(**kwargs):
     parser.add_argument("--max_included_literals", default=32, type=int)
     parser.add_argument("--weighted_clauses", default=True, type=bool)
     parser.add_argument("--epochs", default=5, type=int)
+    parser.add_argument("--train", default=-1, type=int)
+    parser.add_argument("--test", default=-1, type=int)
     args = parser.parse_args()
     for key, value in kwargs.items():
         if key in args.__dict__:
@@ -76,4 +79,4 @@ def default_args(**kwargs):
 
 if __name__ == "__main__":
     results = main(default_args())
-    _LOGGER.info(results)
+    logger.info(results)
