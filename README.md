@@ -14,7 +14,7 @@
 [●] TMU Library  
 [●] Hyper-parameter (Optuna)  
 <br/>
-[&nbsp; ] **UK DALE - Preprocessing**  
+[●] [**UK DALE - Preprocessing**](./dataset/)  
 [&nbsp; ] **Unsupervised TM using ART**  
 <br/>
 [&nbsp; ] Improve: [Adaptive Reasonance](https://arxiv.org/pdf/1905.11437)  
