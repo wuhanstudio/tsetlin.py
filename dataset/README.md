@@ -29,4 +29,5 @@
 
 - https://blog.oliverparson.co.uk/2012/06/public-data-sets-for-nialm.html
 - https://tokhub.github.io/dbecd/
+- https://github.com/kehkok/nilmtk-ukdale
 
