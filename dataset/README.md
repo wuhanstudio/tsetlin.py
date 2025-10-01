@@ -25,17 +25,16 @@
 
 
 Downloaded 8/16 datasets and tested on NILMTK:
-  - ampds: Only 1 building.
-  - iawe: Only 1 building.
-  - combed: Only 2 buildings.
-  - hipe: Only 1 building.
-
-<br />
-
-  - **redd**: 6 buildings. (338MB, H5)
-  - **ukdale**: 5 buildings. (3.11 GB / 5.89 GB, H5)
-  - **greend**: 8 buildings. (9.15 GB, CSV)
-  - **refit**: 20 buildings. (6.81 GB, H5)
+  - ampds: Only 1 building.  
+  - iawe: Only 1 building.  
+  - combed: Only 2 buildings.  
+  - hipe: Only 1 building.  
+&nbsp;
+  - **redd: 6 buildings. (338 MB, H5)**  
+&nbsp;
+  - ukdale: 5 buildings. (3.11 GB / 5.89 GB, H5)  
+  - greend: 8 buildings. (9.15 GB, CSV)  
+  - refit: 20 buildings. (6.81 GB, H5)  
 
 # References
 
