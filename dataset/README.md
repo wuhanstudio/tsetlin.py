@@ -11,7 +11,7 @@
 | **redd** | **[63.3MB](https://github.com/inesylla/energy-disaggregation-DL)** | **csv** | **6**    | **3-19 days**   | **3s**           | **USA**             | **2012** | **[Download](https://tokhub.github.io/dbecd/links/redd.html)** |
 | **iawe**                                                     | **408 MB**                                                   | **h5**  | **1**    | **73 days**     | **1 or 6s**      | **India**           | **2013** | **[Download](https://iawe.github.io/)**                      |
 | **combed**                                                   | **20.7 MB**                                                  | **h5**  | **2**    | **1 month**     | **30s**          | **India**           | **2014** | **[Download](https://combed.github.io/)**                    |
-| **greend**                                                   | **52.5MB**                                                   | **h5**  | **9**    | **12 months**   | **1s**           | **Italy & Austria** | **2014** | **[Download](https://sourceforge.net/projects/greend/)**     |
+| **greend**                                                   | **52.5MB**                                                   | **h5**  | **8**    | **12 months**   | **1s**           | **Italy & Austria** | **2014** | **[Download](https://sourceforge.net/projects/greend/)**     |
 | dred                                                         | N/A                                                          | N/A     | 1        | 2 months        | 1s               | Netherlands         | 2015     | [Download](https://repository.tudelft.nl/record/uuid:c3c0809d-5433-4bbf-8439-3d07b7d7a67a#:~:text=LocED%20framework%20limits%20the%20appliances,system%20locally%20at%20the%20household.) |
 | **refit**                                                    | [**886MB**](https://www.kaggle.com/datasets/kyleahmurphy/uk-electrical-load) | **csv** | **20**   | **2 years**     | **8s**           | **UK**              | **2015** | **[Download](https://pureportal.strath.ac.uk/en/datasets/refit-electrical-load-measurements)** |
 | eco                                                          | 2 GB                                                         | csv     | 6        | 8 months        | 1s               | Switzerland         | 2016     | [Download](https://vs.inf.ethz.ch/res/show.html?what=eco-data) |
@@ -33,7 +33,7 @@ Downloaded 8/16 datasets and tested on NILMTK:
 <br />
 
   - **redd**: 6 buildings. (338MB, H5)
-  - **greend**: 9 buildings. (50MB, H5)
+  - **greend**: 8 buildings. (50MB, H5)
   - **ukdale**: 5 buildings. (3.11 GB / 5.89 GB, H5)
   - **refit**: 20 buildings. (6.81 GB, H5)
 
