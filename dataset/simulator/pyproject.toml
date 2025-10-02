@@ -1,0 +1,15 @@
+[project]
+name = "simulator"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "flask>=3.1.2",
+    "matplotlib>=3.10.6",
+    "nilmtk",
+    "requests>=2.32.5",
+]
+
+[tool.uv.sources]
+nilmtk = { git = "https://github.com/nilmtk/nilmtk.git" }

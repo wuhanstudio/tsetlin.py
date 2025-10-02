@@ -11,7 +11,7 @@ from sysfont import sysfont
 WIFI_SSID = 'nilm'
 WIFI_PWD  = 'nonintrusiveloadmonitoring'
 
-SERVER_URL = 'http://192.168.0.58:5000/building_1'
+SERVER_URL = 'http://192.168.137.1:5000/building_1'
 
 TFT_SCK  = 18
 TFT_MOSI = 23
@@ -50,10 +50,9 @@ tft.text((15, 40), "Building 1 - Main", TFT.RED, sysfont, 1, nowrap=True)
 
 while True:
 
-    res = requests.get(url=SEVER_URL)
+    res = requests.get(url=SERVER_URL)
 
     print(res.text)
     tft.text((35, 60), '            ', TFT.RED, sysfont, 1, nowrap=True)
     tft.text((35, 60), res.text, TFT.RED, sysfont, 1, nowrap=True)
     utime.sleep_ms(3000)
-

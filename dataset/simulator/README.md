@@ -1,12 +1,10 @@
 ## NIML Data Simulator
 
-Install python libraries:
+Create the virtual environment:
 
 ```
 $ uv venv --python 3.11
-$ uv pip install git+https://github.com/nilmtk/nilmtk.git
-$ uv pip install flask
-$ uv pip install matplotlib
+$ uv sync
 ```
 
 Start the server:
