@@ -15,6 +15,8 @@
 [●] Hyper-parameter (Optuna)  
 <br/>
 [●] [**UK DALE - Preprocessing**](./dataset/)  
+[&nbsp; ] NILM (FHMM / CO / KNN / SVM / DNN)  
+<br/>
 [&nbsp; ] **Unsupervised TM using ART**  
 <br/>
 [&nbsp; ] Improve: [Adaptive Reasonance](https://arxiv.org/pdf/1905.11437)  
