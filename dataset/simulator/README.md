@@ -1,4 +1,4 @@
-## NIML Data Simulator
+# Simulator (Online)
 
 Create the virtual environment:
 
@@ -29,4 +29,19 @@ $ . .venv/bin/activate
 $ .venv\Scripts\activate
 
 $ python client.py
+```
+
+
+# Simulator (offline)
+
+Save the raw data as `*.bin`:
+
+```
+$ python data.py
+```
+
+Upload the generated `*.bin` data to micropython:
+
+```
+$ mpremote fs cp main.bin :/main.bin
 ```
