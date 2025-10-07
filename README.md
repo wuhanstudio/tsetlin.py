@@ -26,15 +26,33 @@
 ## Prerequisites
 
 Using `pip`:
+
 ```
 $ python -m pip install -r requirements.txt
 ```
 
 Using `pipenv`:
+
 ```
 $ python -m pip install pipenv
+
 $ pipenv install
 $ pipenv shell
+```
+
+Using `uv`
+
+```
+$ uv python install 3.12
+$ uv venv --python 3.12
+$ uv sync
+
+# Linux
+$ . .venv/bin/activate
+
+# Windows
+$ .venv\Scripts\activate
+
 ```
 
 ## Quick Start
