@@ -53,12 +53,12 @@ def train(X_train, y_train):
     st.number_input("Number of Clauses", min_value=10, max_value=1000, value=100, step=10, key="n_clause")
     st.number_input("Number of States", min_value=100, max_value=1000, value=400, step=10, key="n_state")
 
-    T = st.slider("Hyperparameter T", 0, N_STATE, 20)
-    s = st.slider("Hyperparameter s", 0.0, 10.0, 3.5, 0.1)
-
     EPOCHS = st.session_state.n_epochs
     N_CLAUSE = st.session_state.n_clause
     N_STATE  = st.session_state.n_state
+
+    T = st.slider("Hyperparameter T", 0, N_STATE, 20)
+    s = st.slider("Hyperparameter s", 0.0, 10.0, 3.5, 0.1)
 
     if st.button("Train Model", type="primary"):
         tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=3, N_clause=N_CLAUSE, N_state=N_STATE)
