@@ -11,3 +11,4 @@ loguru
 mnist
 pretty-confusion-matrix
 optuna
+tmu @ git+https://github.com/cair/tmu

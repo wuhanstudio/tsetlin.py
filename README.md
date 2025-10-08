@@ -51,6 +51,7 @@ $ uv sync
 $ . .venv/bin/activate
 
 # Windows
+$ Set-ExecutionPolicy Unrestricted -Scope Process
 $ .venv\Scripts\activate
 
 ```
@@ -79,6 +80,23 @@ $ python main.py --optuna
 
 ```
 $ optuna-dashboard sqlite:///db.sqlite3
+```
+
+## TMU
+
+> [!NOTE]  
+> For Windows users, Visual Studio (Microsoft C++ Build Tools) is needed to compile `TMU` package.
+
+Using `pipenv`:
+
+```
+$ pipenv install git+https://github.com/cair/tmu.git
+```
+
+Using `uv`:
+
+```
+$ uv pip install git+https://github.com/cair/tmu.git
 ```
 
 ## Pytest

@@ -26,6 +26,7 @@ Start the client:
 $ . .venv/bin/activate
 
 # Windows
+$ Set-ExecutionPolicy Unrestricted -Scope Process
 $ .venv\Scripts\activate
 
 $ python client.py
