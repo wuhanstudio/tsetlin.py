@@ -8,7 +8,7 @@ from tqdm import tqdm
 from iris import load_iris_X_y
 
 from tsetlin import Tsetlin
-from tsetlin.utils import booleanize_features
+from tsetlin.utils.booleanize import booleanize_features
 from tsetlin.utils.math import mean, std
 
 # Choose whether to use log or print
