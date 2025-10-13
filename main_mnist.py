@@ -1,15 +1,12 @@
 import argparse
-from loguru import logger
 
 import mnist
-import pandas as pd
-from tqdm import tqdm
 
 from tsetlin import Tsetlin
 from tsetlin.utils import booleanize_features
-from tsetlin.utils.math import mean, std
 
-from sklearn.model_selection import train_test_split
+from tsetlin.utils.log import log
+from tsetlin.utils.tqdm import m_tqdm
 
 mnist.datasets_url = "https://ossci-datasets.s3.amazonaws.com/mnist/"
 
@@ -19,8 +16,8 @@ y_train = mnist.train_labels()
 X_test = mnist.test_images()
 y_test = mnist.test_labels()
 
-logger.debug(f"Train images shape: {X_train.shape}, Train labels shape: {y_train.shape}")
-logger.debug(f"Test images shape: {X_test.shape}, Test labels shape: {y_test.shape}")
+log(f"Train images shape: {X_train.shape}, Train labels shape: {y_train.shape}")
+log(f"Test images shape: {X_test.shape}, Test labels shape: {y_test.shape}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tsetlin Machine on Iris Dataset")
@@ -43,9 +40,9 @@ if __name__ == "__main__":
     if N_BIT not in {1, 2, 4, 8}:
         raise ValueError("n_bit must be one of [1, 2, 4, 8]")
 
-    logger.debug(f"Using {N_BIT} bits for booleanization")
-    logger.debug(f"Number of clauses: {N_CLAUSE}, Number of states: {N_STATE}")
-    logger.debug(f"Threshold T: {args.T}, Specificity s: {args.s}")
+    log(f"Using {N_BIT} bits for booleanization")
+    log(f"Number of clauses: {N_CLAUSE}, Number of states: {N_STATE}")
+    log(f"Threshold T: {args.T}, Specificity s: {args.s}")
 
     # Flatten images
     X_train = X_train.reshape((X_train.shape[0], -1)).astype(float) / 255.0
@@ -63,8 +60,8 @@ if __name__ == "__main__":
     accuracy = sum(y_pred == y_test) / len(y_test)
 
     for epoch in range(N_EPOCHS):
-        logger.info(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
-        for i in tqdm(range(len(X_train))):
+        log(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
+        for i in m_tqdm(range(len(X_train))):
             tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s)
 
         # y_pred = tsetlin.predict(X_train)
@@ -72,26 +69,26 @@ if __name__ == "__main__":
 
     # tsetlin.fit(X_train, y_train, T=15, s=3, epochs=EPOCHS)
 
-    logger.info("")
+    log("")
 
     # Final evaluation
     y_pred = tsetlin.predict(X_test)
     accuracy = sum(y_pred == y_test) / len(y_test)
 
-    logger.info(f"Test Accuracy: {accuracy * 100:.2f}%")
+    log(f"Test Accuracy: {accuracy * 100:.2f}%")
 
     # Save the model
     tsetlin.save_model("tsetlin_model.pb", type="training")
-    logger.info("Model saved to tsetlin_model.pb")
+    log("Model saved to tsetlin_model.pb")
 
-    logger.info("")
+    log("")
 
     # Load the model
     n_tsetlin = Tsetlin.load_model("tsetlin_model.pb")
-    logger.info("Model loaded from tsetlin_model.pb")
+    log("Model loaded from tsetlin_model.pb")
 
     # Evaluate the loaded model
     n_y_pred = n_tsetlin.predict(X_test)
     accuracy = sum(n_y_pred == y_test) / len(y_test)
 
-    logger.info(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
+    log(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")

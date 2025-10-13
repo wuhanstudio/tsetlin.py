@@ -4,23 +4,23 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-numpy = "*"
-pandas = "*"
-scikit-learn = "*"
-pytest = "*"
 tqdm = "*"
-protobuf = "*"
-streamlit = "*"
-stqdm = "*"
-matplotlib = "*"
 loguru = "*"
+protobuf = "*"
 mnist = "*"
-pretty-confusion-matrix = "*"
-optuna = "*"
-optuna-dashboard = "*"
-tmu = {git = "https://github.com/cair/tmu.git"}
 
 [dev-packages]
+pytest = "*"
+matplotlib = "*"
+pandas = "*"
+optuna = "*"
+optuna-dashboard = "*"
+streamlit = "*"
+stqdm = "*"
+pretty-confusion-matrix = "*"
+mpremote = "*"
+esptool = "*"
+tmu = {git = "https://github.com/cair/tmu.git"}
 
 [requires]
 python_version = "3.10"

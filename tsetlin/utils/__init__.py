@@ -4,3 +4,4 @@ from tsetlin.utils.norm import norm_cdf
 
 from tsetlin.utils.tqdm import m_tqdm
 from tsetlin.utils.log import log
+from tsetlin.utils.split import train_test_split

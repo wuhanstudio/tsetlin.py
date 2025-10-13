@@ -1,14 +1,15 @@
-numpy
-pandas
-scikit-learn
-pytest
 tqdm
+loguru
 protobuf
+mnist
+pytest
+matplotlib
+pandas
+optuna
+optuna-dashboard
 streamlit
 stqdm
-matplotlib
-loguru
-mnist
 pretty-confusion-matrix
-optuna
+mpremote
+esptool
 tmu @ git+https://github.com/cair/tmu
