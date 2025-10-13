@@ -1,8 +1,9 @@
 import random
-from tqdm import tqdm
 
 from tsetlin.clause import Clause
 from tsetlin.utils import argmax, clip, to_int32
+
+from tsetlin.utils.tqdm import m_tqdm
 
 class Tsetlin:
     def __init__(self, N_feature, N_class, N_clause, N_state):
@@ -25,7 +26,7 @@ class Tsetlin:
     def predict(self, X, return_votes=False):
         y_pred = []
         votes_list = []
-        for i in tqdm(range(len(X)), desc="Evaluating"):
+        for i in m_tqdm(range(len(X)), desc="Evaluating"):
             votes = [0] * self.n_classes
             for c in range(self.n_classes):
                 for j in range(int(self.n_clauses / 2)):
@@ -85,7 +86,7 @@ class Tsetlin:
                 self.neg_clauses[other_class][i].update(X, 1, self.neg_clauses[other_class][i].evaluate(X), s=s)
 
     def fit(self, X, y, T, s, epochs):
-        for epoch in tqdm(range(epochs), desc="Training Epochs"):
+        for epoch in m_tqdm(range(epochs), desc="Training Epochs"):
             for i in range(len(X)):
                 self.step(X[i], y[i], T=T, s=s)
 

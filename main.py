@@ -1,9 +1,9 @@
+import sys
 import random
 random.seed(0)
 
 import argparse
 
-from tqdm import tqdm
 
 from iris import load_iris_X_y
 
@@ -11,14 +11,13 @@ from tsetlin import Tsetlin
 from tsetlin.utils.booleanize import booleanize_features
 from tsetlin.utils.math import mean, std
 
-# Choose whether to use log or print
-USE_LOGGER = True
+from tsetlin.utils.tqdm import m_tqdm
+from tsetlin.utils.log import log
 
-if USE_LOGGER:
-    from loguru import logger
-    log = logger.info
-else:
-    log = print
+def shuffle(lst):
+    for i in range(len(lst) - 1, 0, -1):
+        j = random.randint(0, i)
+        lst[i], lst[j] = lst[j], lst[i]
 
 def train_test_split(X, y, test_size=0.25, random_state=None):
     # Optional: seed the random number generator for reproducibility
@@ -27,7 +26,7 @@ def train_test_split(X, y, test_size=0.25, random_state=None):
 
     # Create a list of indices and shuffle them
     indices = list(range(len(X)))
-    random.shuffle(indices)
+    shuffle(indices)
 
     # Calculate split index
     split_idx = int(len(X) * (1 - test_size))
@@ -63,7 +62,7 @@ def objective(trial):
     tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=3, N_clause=n_clause, N_state=n_state)
 
     for epoch in range(N_EPOCHS):
-        for i in tqdm(range(len(X_train))):
+        for i in m_tqdm(range(len(X_train))):
             tsetlin.step(X_train[i], y_train[i], T=T, s=s)
 
     y_pred = tsetlin.predict(X_test)
@@ -76,9 +75,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tsetlin Machine on Iris Dataset")
     parser.add_argument("--epochs", type=int, default=10, help="Number of training epochs")
 
-    parser.add_argument("--n_clause", type=int, default=100, help="Number of clauses")
-    parser.add_argument("--n_state", type=int, default=400, help="Number of states")
-    parser.add_argument("--n_bit", type=int, default=8, help="Number of bits in [1, 2, 4, 8]")
+    parser.add_argument("--n_clause", type=int, default=20, help="Number of clauses")
+    parser.add_argument("--n_state", type=int, default=10, help="Number of states")
+    parser.add_argument("--n_bit", type=int, default=4, help="Number of bits in [1, 2, 4, 8]")
     
     parser.add_argument("--T", type=int, default=30, help="Threshold T")
     parser.add_argument("--s", type=float, default=6.0, help="Specificity s")
@@ -128,7 +127,7 @@ if __name__ == "__main__":
 
         for epoch in range(N_EPOCHS):
             log(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
-            for i in tqdm(range(len(X_train))):
+            for i in m_tqdm(range(len(X_train))):
                 tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s)
 
             y_pred = tsetlin.predict(X_train)
@@ -144,18 +143,19 @@ if __name__ == "__main__":
 
         log(f"Test Accuracy: {accuracy * 100:.2f}%")
 
-        # Save the model
-        tsetlin.save_model("tsetlin_model.pb", type="training")
-        log("Model saved to tsetlin_model.pb")
+        if sys.implementation.name != "micropython":
+            # Save the model
+            tsetlin.save_model("tsetlin_model.pb", type="training")
+            log("Model saved to tsetlin_model.pb")
 
-        log("")
+            log("")
 
-        # Load the model
-        n_tsetlin = Tsetlin.load_model("tsetlin_model.pb")
-        log("Model loaded from tsetlin_model.pb")
+            # Load the model
+            n_tsetlin = Tsetlin.load_model("tsetlin_model.pb")
+            log("Model loaded from tsetlin_model.pb")
 
-        # Evaluate the loaded model
-        n_y_pred = n_tsetlin.predict(X_test)
-        accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(y_pred, y_test)]) / len(y_test)
+            # Evaluate the loaded model
+            n_y_pred = n_tsetlin.predict(X_test)
+            accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(y_pred, y_test)]) / len(y_test)
 
-        log(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
+            log(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
