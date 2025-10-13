@@ -2,17 +2,47 @@ import random
 random.seed(0)
 
 import argparse
-from loguru import logger
 
 from tqdm import tqdm
+
+from iris import load_iris_X_y
 
 from tsetlin import Tsetlin
 from tsetlin.utils import booleanize_features
 from tsetlin.utils.math import mean, std
 
-from sklearn.model_selection import train_test_split
+# Choose whether to use log or print
+USE_LOGGER = True
 
-from iris import load_iris_X_y
+if USE_LOGGER:
+    from loguru import logger
+    log = logger.info
+else:
+    log = print
+
+def train_test_split(X, y, test_size=0.25, random_state=None):
+    # Optional: seed the random number generator for reproducibility
+    if random_state is not None:
+        random.seed(random_state)
+
+    # Create a list of indices and shuffle them
+    indices = list(range(len(X)))
+    random.shuffle(indices)
+
+    # Calculate split index
+    split_idx = int(len(X) * (1 - test_size))
+
+    # Split indices
+    train_indices = indices[:split_idx]
+    test_indices = indices[split_idx:]
+
+    # Use the indices to split X and y
+    X_train = [X[i] for i in train_indices]
+    X_test = [X[i] for i in test_indices]
+    y_train = [y[i] for i in train_indices]
+    y_test = [y[i] for i in test_indices]
+
+    return X_train, X_test, y_train, y_test
 
 # Example usage
 X, y = load_iris_X_y('iris.csv')
@@ -62,7 +92,7 @@ if __name__ == "__main__":
     if N_BIT not in {1, 2, 4, 8}:
         raise ValueError("n_bit must be one of [1, 2, 4, 8]")
 
-    logger.debug(f"Using {N_BIT} bits for booleanization")
+    log(f"Using {N_BIT} bits for booleanization")
     X_bool = booleanize_features(X, X_mean, X_std, num_bits=N_BIT)
 
     # Train-test split
@@ -88,8 +118,8 @@ if __name__ == "__main__":
         N_CLAUSE = args.n_clause
         N_STATE  = args.n_state
 
-        logger.debug(f"Number of clauses: {N_CLAUSE}, Number of states: {N_STATE}")
-        logger.debug(f"Threshold T: {args.T}, Specificity s: {args.s}")
+        log(f"Number of clauses: {N_CLAUSE}, Number of states: {N_STATE}")
+        log(f"Threshold T: {args.T}, Specificity s: {args.s}")
 
         tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=3, N_clause=N_CLAUSE, N_state=N_STATE)
 
@@ -97,7 +127,7 @@ if __name__ == "__main__":
         accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(y_pred, y_test)]) / len(y_test)
 
         for epoch in range(N_EPOCHS):
-            logger.info(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
+            log(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
             for i in tqdm(range(len(X_train))):
                 tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s)
 
@@ -106,26 +136,26 @@ if __name__ == "__main__":
 
         # tsetlin.fit(X_train, y_train, T=15, s=3, epochs=EPOCHS)
 
-        logger.info("")
+        log("")
 
         # Final evaluation
         y_pred = tsetlin.predict(X_test)
         accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(y_pred, y_test)]) / len(y_test)
 
-        logger.info(f"Test Accuracy: {accuracy * 100:.2f}%")
+        log(f"Test Accuracy: {accuracy * 100:.2f}%")
 
         # Save the model
         tsetlin.save_model("tsetlin_model.pb", type="training")
-        logger.info("Model saved to tsetlin_model.pb")
+        log("Model saved to tsetlin_model.pb")
 
-        logger.info("")
+        log("")
 
         # Load the model
         n_tsetlin = Tsetlin.load_model("tsetlin_model.pb")
-        logger.info("Model loaded from tsetlin_model.pb")
+        log("Model loaded from tsetlin_model.pb")
 
         # Evaluate the loaded model
         n_y_pred = n_tsetlin.predict(X_test)
         accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(y_pred, y_test)]) / len(y_test)
 
-        logger.info(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
+        log(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
