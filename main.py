@@ -4,7 +4,6 @@ random.seed(0)
 import argparse
 from loguru import logger
 
-import pandas as pd
 from tqdm import tqdm
 
 from tsetlin import Tsetlin
@@ -13,16 +12,10 @@ from tsetlin.utils.math import mean, std
 
 from sklearn.model_selection import train_test_split
 
-iris = pd.read_csv("iris.csv")
+from iris import load_iris_X_y
 
-iris['label'] = iris['species'].map({
-    'setosa': 0,
-    'versicolor': 1,
-    'virginica': 2
-})
-
-y = iris["label"].to_numpy()
-X = iris[["sepal_length", "sepal_width", "petal_length", "petal_width"]].to_numpy()
+# Example usage
+X, y = load_iris_X_y('iris.csv')
 
 # Normalization
 X_mean = mean(X)
@@ -44,7 +37,10 @@ def objective(trial):
             tsetlin.step(X_train[i], y_train[i], T=T, s=s)
 
     y_pred = tsetlin.predict(X_test)
-    return 1.0 - (sum(y_pred == y_test) / len(y_test))
+    
+    accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(y_pred, y_test)]) / len(y_test)
+
+    return (1.0 - accuracy)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tsetlin Machine on Iris Dataset")
@@ -98,7 +94,7 @@ if __name__ == "__main__":
         tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=3, N_clause=N_CLAUSE, N_state=N_STATE)
 
         y_pred = tsetlin.predict(X_test)
-        accuracy = sum(y_pred == y_test) / len(y_test)
+        accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(y_pred, y_test)]) / len(y_test)
 
         for epoch in range(N_EPOCHS):
             logger.info(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
@@ -106,7 +102,7 @@ if __name__ == "__main__":
                 tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s)
 
             y_pred = tsetlin.predict(X_train)
-            accuracy = sum(y_pred == y_train) / len(y_train)
+            accuracy = sum([ 1 if pred == train else 0 for pred, train in zip(y_pred, y_train)]) / len(y_train)
 
         # tsetlin.fit(X_train, y_train, T=15, s=3, epochs=EPOCHS)
 
@@ -114,7 +110,7 @@ if __name__ == "__main__":
 
         # Final evaluation
         y_pred = tsetlin.predict(X_test)
-        accuracy = sum(y_pred == y_test) / len(y_test)
+        accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(y_pred, y_test)]) / len(y_test)
 
         logger.info(f"Test Accuracy: {accuracy * 100:.2f}%")
 
@@ -130,6 +126,6 @@ if __name__ == "__main__":
 
         # Evaluate the loaded model
         n_y_pred = n_tsetlin.predict(X_test)
-        accuracy = sum(n_y_pred == y_test) / len(y_test)
+        accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(y_pred, y_test)]) / len(y_test)
 
         logger.info(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
