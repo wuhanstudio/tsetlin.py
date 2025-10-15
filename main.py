@@ -48,8 +48,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tsetlin Machine on Iris Dataset")
     parser.add_argument("--epochs", type=int, default=10, help="Number of training epochs")
 
-    parser.add_argument("--n_clause", type=int, default=200, help="Number of clauses")
-    parser.add_argument("--n_state", type=int, default=400, help="Number of states")
+    parser.add_argument("--n_clause", type=int, default=20, help="Number of clauses")
+    parser.add_argument("--n_state", type=int, default=10, help="Number of states")
     parser.add_argument("--n_bit", type=int, default=4, help="Number of bits in [1, 2, 4, 8]")
     
     parser.add_argument("--T", type=int, default=30, help="Threshold T")
