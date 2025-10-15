@@ -18,6 +18,14 @@
 
 > Cross Platform Tsetlin Machine on the iris and mnist Dataset
 
+Default settings: 
+
+- Booleanization: 4 bits
+- Number of clauses: 20
+- Number of states: 10
+- Threshold T: 30
+- Specificity s: 6.0
+
 | Hardware      | CPU                       | Memory | Speed        |
 | ------------- | ------------------------- | ------ | ------------ |
 | ESP32         | Xtensa LX6 @ 160MHz       | 520 KB | ~ 1.5 it/s   |
