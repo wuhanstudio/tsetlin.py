@@ -24,7 +24,7 @@
 | Mango Pi MQ   | RISC-V 64 @ 1Ghz          | 64 MB  | ~ 60 it/s    |
 | Orange Pi One | Allwinner H3 @ 1.296GHz   | 512 MB | ~ 800 it/s   |
 | Google Pixelbook | Intel i5-7Y57 @ 3.30GHz| 8 GB   | ~ 8,000 it/s |
-| Laptop PC     | Intel i5-1035G1 @ 3.60GHz | 16 GB  | ~  it/s  |
+| Laptop PC     | Intel i5-1035G1 @ 3.60GHz | 16 GB  | ~ 8,000 it/s  |
 | Desktop PC    | Intel i7-12700  @ 4.90GHz | 32 GB  | ~ 20,000 it/s |
 
 <!-- TOC --><a name="micropython-esp32"></a>
