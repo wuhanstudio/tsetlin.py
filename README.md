@@ -18,7 +18,16 @@
 
 > Cross Platform Tsetlin Machine on the iris and mnist Dataset
 
+| Hardware      | CPU                       | Memory | Speed        |
+| ------------- | ------------------------- | ------ | ------------ |
+| ESP32         | Xtensa LX6 @ 160MHz       | 520 KB | ~ 0.05 it/s  |
+| Mango Pi MQ   | RISC-V 64 @ 1Ghz          | 64 MB  | ~ 70 it/s    |
+| Orange Pi One | Allwinner H3 @ 1.296GHz   | 512 MB |              |
+| Laptop PC     | Intel i5-1035G1 @ 3.60GHz | 16 GB  | ~80,00 it/s  |
+| Desktop PC    |                           | 32 GB  | ~20,000 it/s |
+
 <!-- TOC --><a name="micropython-esp32"></a>
+
 ## Micropython (ESP32)
 
 Download micropython firmware [ESP32_GENERIC-20250911-v1.26.1.bin](https://micropython.org/resources/firmware/ESP32_GENERIC-20250911-v1.26.1.bin):
