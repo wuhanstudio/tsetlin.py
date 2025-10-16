@@ -3,3 +3,4 @@ __pycache__/
 *.pb
 *.sqlite3
 temp/
+.ipynb_checkpoints/
