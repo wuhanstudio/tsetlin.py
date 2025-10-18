@@ -7,10 +7,10 @@ name = "pypi"
 tqdm = "*"
 loguru = "*"
 protobuf = "*"
-mnist = "*"
 
 [dev-packages]
 pytest = "*"
+mnist = "*"
 matplotlib = "*"
 pandas = "*"
 optuna = "*"
