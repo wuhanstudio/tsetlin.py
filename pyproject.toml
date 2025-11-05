@@ -24,4 +24,7 @@ dev = [
     "esptool>=5.1.0",
     "tmu @ git+https://github.com/cair/tmu.git",
     "pandas>=2.3.3",
+    "tensorflow-datasets>=4.9.9",
+    "tensorflow>=2.20.0",
+    "black>=25.9.0",
 ]

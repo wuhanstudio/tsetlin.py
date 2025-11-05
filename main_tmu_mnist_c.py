@@ -1,0 +1,97 @@
+import argparse
+from loguru import logger
+
+import numpy as np
+
+from tmu.models.classification.vanilla_classifier import TMClassifier
+from tmu.tools import BenchmarkTimer
+
+import tensorflow as tf
+import tensorflow_datasets as tfds
+
+# Construct a tf.data.Dataset
+train_ds = tfds.load('mnist_corrupted', split='train', shuffle_files=True)
+train_ds = tfds.as_numpy(train_ds)
+
+test_ds = tfds.load('mnist_corrupted', split='test', shuffle_files=True)
+test_ds = tfds.as_numpy(test_ds)
+
+data = {}
+data['x_train'] = np.array([example['image'].flatten() for example in train_ds])
+data['y_train'] = np.array([example['label'] for example in train_ds])
+
+data['x_test'] = np.array([example['image'].flatten() for example in test_ds])
+data['y_test'] = np.array([example['label'] for example in test_ds])
+
+def metrics(args):
+    return dict(
+        accuracy=[],
+        train_time=[],
+        test_time=[],
+        args=vars(args)
+    )
+
+def main(args):
+    experiment_results = metrics(args)
+
+    tm = TMClassifier(
+        type_iii_feedback=False,
+        number_of_clauses=args.num_clauses,
+        T=args.T,
+        s=args.s,
+        max_included_literals=args.max_included_literals,
+        platform="CPU",
+        weighted_clauses=args.weighted_clauses,
+        seed=42,
+    )
+
+    logger.info(f"Running {TMClassifier} for {args.epochs}")
+    logger.debug(f"Input shape of training images: {data['x_train'][:args.train].shape}")
+    logger.debug(f"Input shape of testing images: {data['x_test'][:args.test].shape}")
+
+    for epoch in range(args.epochs):
+        benchmark_total = BenchmarkTimer(logger=None, text="Epoch Time")
+        with benchmark_total:
+            benchmark1 = BenchmarkTimer(logger=None, text="Training Time")
+            with benchmark1:
+                res = tm.fit(
+                    data["x_train"][:args.train].astype(np.uint32),
+                    data["y_train"][:args.train].astype(np.uint32),
+                    metrics=["update_p"],
+                )
+
+            experiment_results["train_time"].append(benchmark1.elapsed())
+
+            # print(res)
+            benchmark2 = BenchmarkTimer(logger=None, text="Testing Time")
+            with benchmark2:
+                result = 100 * (tm.predict(data["x_test"][:args.test]) == data["y_test"][:args.test]).mean()
+                experiment_results["accuracy"].append(result)
+            experiment_results["test_time"].append(benchmark2.elapsed())
+
+            logger.info(f"Epoch: {epoch + 1}, Accuracy: {result:.2f}, Training Time: {benchmark1.elapsed():.2f}s, "
+                         f"Testing Time: {benchmark2.elapsed():.2f}s")
+
+    return experiment_results
+
+
+def default_args(**kwargs):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--num_clauses", default=2000, type=int)
+    parser.add_argument("--T", default=5000, type=int)
+    parser.add_argument("--s", default=10.0, type=float)
+    parser.add_argument("--max_included_literals", default=32, type=int)
+    parser.add_argument("--weighted_clauses", default=True, type=bool)
+    parser.add_argument("--epochs", default=5, type=int)
+    parser.add_argument("--train", default=-1, type=int)
+    parser.add_argument("--test", default=-1, type=int)
+    args = parser.parse_args()
+    for key, value in kwargs.items():
+        if key in args.__dict__:
+            setattr(args, key, value)
+    return args
+
+
+if __name__ == "__main__":
+    results = main(default_args())
+    logger.info(results)
