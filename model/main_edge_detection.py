@@ -5,9 +5,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 import numpy as np
+from collections import deque
+from statistics import stdev
 
-
-def find_steady_states(dataframe, min_n_samples=2, state_threshold=15, noise_level=70):
+def find_steady_states(dataframe, min_n_samples=5, state_threshold=15, noise_level=70):
     """Finds steady states given a DataFrame of power.
 
     Parameters
@@ -27,6 +28,7 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15, noise_lev
     """
     # Tells whether we have both real and reactive power or only real power
     estimated_steady_power = 0
+    instantaneous_change_dequeue = deque(maxlen=min_n_samples)
     last_steady_power = 0
     previous_measurement = 0
 
@@ -59,13 +61,19 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15, noise_lev
         state_change = np.fabs(this_measurement - previous_measurement)
 
         if np.sum(state_change > state_threshold):
+            if state_change > noise_level:
+                tran_start_time.append(dataframe.index[dataframe.index.get_loc(row.index[0]) - 1])
             instantaneous_change = True
-            tran_start_time.append(dataframe.index[dataframe.index.get_loc(row.index[0]) - 1])
         else:
             instantaneous_change = False
 
+        # Identify end of ongoing change
+        if ongoing_change and (not instantaneous_change):
+            tran_end_time = dataframe.index[dataframe.index.get_loc(row.index[0]) - 1]
+
         # Step 3: Identify if transition is just starting, if so, process it
-        if instantaneous_change and (not ongoing_change):
+        # if instantaneous_change and (not ongoing_change):
+        if len(instantaneous_change_dequeue) == min_n_samples and all(not x for x in instantaneous_change_dequeue):
 
             # Calculate transition size
             last_transition = estimated_steady_power - last_steady_power
@@ -87,11 +95,14 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15, noise_lev
 
                 # last states steady power
                 steady_states.append(estimated_steady_power)
+            # else:
+                # tran_start_time = []
 
             # 3B
             last_steady_power = estimated_steady_power
-            # 3C
-            # tran_end_time = row.index[0]  # start new steady state
+
+        # 3C
+        # tran_end_time = row.index[0]  # start new steady state
 
         # Step 4: if a new steady state is starting, zero counter
         if instantaneous_change:
@@ -101,27 +112,26 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15, noise_lev
         estimated_steady_power = (N * estimated_steady_power + this_measurement) / (
             N + 1
         )
+        instantaneous_change_dequeue.append(instantaneous_change)
 
         # Step 6: increment counter
         N += 1
 
         # Step 7
-        if ongoing_change and (not instantaneous_change):
-            tran_end_time = dataframe.index[dataframe.index.get_loc(row.index[0]) - 1]
         ongoing_change = instantaneous_change
 
         # Step 8
         previous_measurement = this_measurement
 
     # Appending last edge
-    last_transition = estimated_steady_power - last_steady_power
-    if np.fabs(last_transition) > noise_level:
-        index_transitions_start.append(tran_start_time[0])
-        index_transitions_end.append(tran_end_time)
-        transitions.append(last_transition)
+    # last_transition = estimated_steady_power - last_steady_power
+    # if np.fabs(last_transition) > noise_level:
+    #     index_transitions_start.append(dataframe.index[-2])
+    #     index_transitions_end.append(tran_end_time)
+    #     transitions.append(last_transition)
     
-        index_steady_states.append(tran_end_time)
-        steady_states.append(estimated_steady_power)
+    #     index_steady_states.append(tran_end_time)
+    #     steady_states.append(estimated_steady_power)
 
     if len(index_transitions_end) == 0:
         # No events
@@ -138,7 +148,7 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15, noise_lev
         return steady_states, transients
 
 
-TRAINING_DATA_DURATION = 1
+TRAINING_DATA_DURATION = 3
 delta_time = pd.to_timedelta(TRAINING_DATA_DURATION, unit="h")
 
 # Load REDD dataset
@@ -164,7 +174,7 @@ fridge_df = fridge.power_series_all_data(**kw)
 fridge_df = fridge_df.to_frame().fillna(0)
 
 # Global variables
-noise_level = 70
+noise_level = 50
 state_threshold = 15
 
 # Main: Find steady states
@@ -189,7 +199,7 @@ plt.show()
 steady_states_fridge, transients_fridge = find_steady_states(
     fridge_df, noise_level=noise_level, state_threshold=state_threshold
 )
-
+print(transients_fridge)
 # Plot steady states with fridge
 ax = fridge_df.plot()
 steady_states_fridge.plot(style="o", ax=ax)
