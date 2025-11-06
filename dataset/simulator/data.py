@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 from loguru import logger
 
-SAMPLE_PERIOD = 3  # seconds
+SAMPLE_PERIOD = 6  # seconds
 
 redd = nilmtk.DataSet("redd.h5")
 
@@ -14,6 +14,8 @@ main_meter_0 = mains.meters[0]
 
 main_meter_0_df = list(main_meter_0.load(sample_period=SAMPLE_PERIOD))[0]
 main_meter_0_df.dropna(inplace=True)
+
+# main_meter_0_df = main_meter_0_df.iloc[0:(len(main_meter_0_df) // 2)]
 
 output_file = open('main.bin', 'wb')
 main_meter_0_data = main_meter_0_df.values.flatten()

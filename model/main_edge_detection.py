@@ -54,7 +54,7 @@ def plot_edge_detection(dataframe, noise_level=50, state_threshold=15):
     plt.show()
 
 # Load REDD dataset
-redd = nilmtk.DataSet("model/redd.h5")
+redd = nilmtk.DataSet("redd.h5")
 building_1 = redd.buildings[1].elec
 main_meter = building_1.mains()[1]
 

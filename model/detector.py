@@ -1,5 +1,3 @@
-from collections import deque
-
 class EdgeDetector:
     def __init__(self, current_time, current_measurement, state_threshold=15, noise_level=70, min_n_samples=3):
         # Hyperparameters
@@ -13,8 +11,8 @@ class EdgeDetector:
 
         # Change detection flags
         self.ongoing_change = False          # power change in progress over multiple seconds
-        self.instantaneous_change_dequeue = deque(maxlen=min_n_samples)
-
+        self.instantaneous_change_queue = []
+    
         # Transition time tracking
         self.tran_start_time = []
         self.tran_data_list = []
@@ -57,7 +55,7 @@ class EdgeDetector:
         # if instantaneous_change and (not ongoing_change):
 
         # Step 3: Identify if the state is now steady (response faster than Hart's algo)
-        if len(self.instantaneous_change_dequeue) == self.min_n_samples and all(not x for x in self.instantaneous_change_dequeue):
+        if len(self.instantaneous_change_queue) == self.min_n_samples and all(not x for x in self.instantaneous_change_queue):
 
             # Calculate transition size
             last_transition = self.estimated_steady_power - self.last_steady_power
@@ -97,7 +95,10 @@ class EdgeDetector:
         self.estimated_steady_power = (self.N * self.estimated_steady_power + current_measurement) / (
             self.N + 1
         )
-        self.instantaneous_change_dequeue.append(instantaneous_change)
+
+        if len(self.instantaneous_change_queue) == self.min_n_samples:
+            self.instantaneous_change_queue.pop(0)
+        self.instantaneous_change_queue.append(instantaneous_change)
 
         # Step 6: increment counter
         self.N += 1
