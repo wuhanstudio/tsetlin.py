@@ -78,3 +78,5 @@ fridge_df = fridge_df.to_frame().fillna(0)
 # Plot edge detection results
 plot_edge_detection(main_df, noise_level=50, state_threshold=15)
 plot_edge_detection(fridge_df, noise_level=50, state_threshold=15)
+
+redd.store.close()
