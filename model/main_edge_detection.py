@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 
 from detector import EdgeDetector
 
+TRAINING_DATA_DURATION = 6  # hours
+delta_time = pd.to_timedelta(TRAINING_DATA_DURATION, unit="h")
+
 def plot_edge_detection(dataframe, noise_level=50, state_threshold=15):
     detector = None
     for index, row in dataframe.iterrows():
@@ -23,6 +26,8 @@ def plot_edge_detection(dataframe, noise_level=50, state_threshold=15):
     # Prepare DataFrames for steady states and transients
     steady_states = pd.DataFrame()
     transients = pd.DataFrame()
+
+    assert len(detector.transitions) == len(detector.tran_data_list)
 
     # Create DataFrames if we have detected any transitions
     if len(detector.index_transitions_end) > 0:
@@ -47,9 +52,6 @@ def plot_edge_detection(dataframe, noise_level=50, state_threshold=15):
     plt.ylabel("Power (W)")
     plt.xlabel("Time")
     plt.show()
-
-TRAINING_DATA_DURATION = 3
-delta_time = pd.to_timedelta(TRAINING_DATA_DURATION, unit="h")
 
 # Load REDD dataset
 redd = nilmtk.DataSet("model/redd.h5")
