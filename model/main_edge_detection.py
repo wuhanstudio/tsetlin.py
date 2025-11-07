@@ -1,6 +1,8 @@
 import nilmtk
 from nilmtk.timeframe import TimeFrame
 
+from loguru import logger
+
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -21,7 +23,12 @@ def plot_edge_detection(dataframe, noise_level=50, state_threshold=15):
             detector = EdgeDetector(current_time, current_measurement, state_threshold=state_threshold, noise_level=noise_level)
             continue
 
-        detector.update(current_time, current_measurement)
+        output = detector.update(current_time, current_measurement)
+        if output.get('transition', False):
+            logger.info(f"Duration: {len(output['transition_data'])} samples")
+            logger.info(f"Transition: {output['transition_power_change']}")
+            logger.info(f"Transition: {output['transition_data']}")
+            logger.info("---")
 
     # Prepare DataFrames for steady states and transients
     steady_states = pd.DataFrame()

@@ -32,6 +32,8 @@ class EdgeDetector:
         self.index_steady_states = []
 
     def update(self, current_time, current_measurement):
+        output = {'transition': False}
+
         # Step 2: this does the threshold test and then we sum the boolean
         state_change = abs(current_measurement - self.previous_measurement)
 
@@ -68,6 +70,12 @@ class EdgeDetector:
                 self.index_transitions_end.append(self.tran_end_time)
                 self.index_transitions_start.append(self.tran_start_time[0])
                 self.tran_start_time = []
+
+                output['transition'] = True
+                output['transition_start_time'] = self.index_transitions_start[-1]
+                output['transition_end_time'] = self.index_transitions_end[-1]
+                output['transition_power_change'] = last_transition
+                output['transition_data'] = [ t.item() for t in self.tran_data ]
 
                 self.tran_data_list.append(self.tran_data)
                 self.tran_data = []
@@ -109,3 +117,6 @@ class EdgeDetector:
         # Step 8
         self.previous_measurement = current_measurement
         self.previous_time = current_time
+
+        return output
+
