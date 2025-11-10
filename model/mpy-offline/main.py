@@ -10,7 +10,7 @@ from ST7735 import TFT, TFTColor
 
 from sysfont import sysfont
 
-noise_level=50
+noise_level=80
 state_threshold=15
 
 USE_TFT = True

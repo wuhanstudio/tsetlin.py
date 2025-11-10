@@ -66,8 +66,11 @@ building_1 = redd.buildings[1].elec
 main_meter = building_1.mains()[1]
 
 # Get timeframe for training data
+# start_time = pd.Timestamp('2011-04-18 18:30:54-0400', tz='US/Eastern')
+# end_time = start_time + delta_time
+
 start_time = main_meter.get_timeframe().start
-end_time = start_time + delta_time
+end_time = main_meter.get_timeframe().end
 
 kw = {
     "sections": [TimeFrame(start=start_time, end=end_time)],
@@ -85,7 +88,7 @@ fridge_df = fridge.power_series_all_data(**kw)
 fridge_df = fridge_df.to_frame().fillna(0)
 
 # Plot edge detection results
-plot_edge_detection(main_df, noise_level=50, state_threshold=15)
-plot_edge_detection(fridge_df, noise_level=50, state_threshold=15)
+plot_edge_detection(main_df, noise_level=80, state_threshold=15)
+plot_edge_detection(fridge_df, noise_level=80, state_threshold=15)
 
 redd.store.close()

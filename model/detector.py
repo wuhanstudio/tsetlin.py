@@ -1,5 +1,5 @@
 class EdgeDetector:
-    def __init__(self, current_time, current_measurement, state_threshold=15, noise_level=70, min_n_samples=3):
+    def __init__(self, current_time, current_measurement, state_threshold=15, noise_level=50, min_n_samples=2):
         # Hyperparameters
         self.state_threshold = state_threshold
         self.noise_level = noise_level
@@ -38,11 +38,11 @@ class EdgeDetector:
         state_change = abs(current_measurement - self.previous_measurement)
 
         instantaneous_change = False
-        if state_change > self.state_threshold:
-            if  abs(current_measurement - self.last_steady_power) > self.noise_level:
-                self.tran_start_time.append(self.previous_time)
-                self.tran_data.append(self.previous_measurement)
+        if  abs(current_measurement - self.last_steady_power) > self.noise_level:
+            self.tran_start_time.append(self.previous_time)
+            self.tran_data.append(self.previous_measurement)
 
+        if state_change > self.state_threshold:
             instantaneous_change = True
         else:
             instantaneous_change = False
