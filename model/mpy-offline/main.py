@@ -38,9 +38,8 @@ if USE_TFT:
     tft.rgb(True)
 
     tft.fill(TFT.BLACK)
-    tft.text((15, 40), "Duration: ", TFT.RED, sysfont, 1, nowrap=True)
-    tft.text((15, 60), "Transition", TFT.RED, sysfont, 1, nowrap=True)
-    tft.text((15, 80), "Sequence: ", TFT.RED, sysfont, 1, nowrap=True)
+    tft.text((2, 40), "Duration: ", TFT.RED, sysfont, 1, nowrap=True)
+    tft.text((2, 60), "Transition", TFT.RED, sysfont, 1, nowrap=True)
 
 if 'main.bin' in os.listdir():
     file_size = os.stat('main.bin')[6]
@@ -67,9 +66,10 @@ if 'main.bin' in os.listdir():
         
         # Display on TFT
         if output.get('transition', False) and USE_TFT:
-            tft.text((15, 40), f"Duration: {len(output['transition_data'])} samples", TFT.RED, sysfont, 1, nowrap=True)
-            tft.text((15, 60), f"Transition: {output['transition_power_change']}", TFT.RED, sysfont, 1, nowrap=True)
-            tft.text((15, 80), f"Sequence: {output['transition_data']}", TFT.RED, sysfont, 1, nowrap=True)
+            tft.text((2, 40), f"Duration: {len(output['transition_data'])} samples", TFT.RED, sysfont, 1, nowrap=True)
+            tft.text((2, 60), f"Transition: {output['transition_power_change']}", TFT.RED, sysfont, 1, nowrap=True)
+            tft.text((2, 80), "                                                                                ", TFT.RED, sysfont, 1, nowrap=True)
+            tft.text((2, 80), f"{[ int(t) for t in output['transition_data'] ]}", TFT.RED, sysfont, 1, nowrap=True)
 
         if(detector.ongoing_change ):
             led.off()
@@ -82,3 +82,4 @@ if 'main.bin' in os.listdir():
         utime.sleep_ms(100)
 else:
     print("Please Upload data")
+
