@@ -10,7 +10,7 @@ ys = []
 
 import serial
 
-ser = serial.Serial('COM12', 115200, timeout=1)
+ser = serial.Serial('COM11', 115200, timeout=1)
 
 i = 0
 

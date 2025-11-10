@@ -16,7 +16,7 @@ def plot_edge_detection(dataframe, noise_level=50, state_threshold=15):
     for index, row in dataframe.iterrows():
         row = row.to_frame().iloc[0]
         current_time = row.index[0]
-        current_measurement = row.iloc[0]
+        current_measurement = row.iloc[0].item()
 
         # Initialize detector on first iteration
         if index == dataframe.index[0]:

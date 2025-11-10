@@ -75,7 +75,7 @@ class EdgeDetector:
                 output['transition_start_time'] = self.index_transitions_start[-1]
                 output['transition_end_time'] = self.index_transitions_end[-1]
                 output['transition_power_change'] = last_transition
-                output['transition_data'] = [ t.item() for t in self.tran_data ]
+                output['transition_data'] = [ t for t in self.tran_data ]
 
                 self.tran_data_list.append(self.tran_data)
                 self.tran_data = []
