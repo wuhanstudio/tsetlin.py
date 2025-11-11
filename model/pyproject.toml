@@ -1,0 +1,21 @@
+[project]
+name = "tsetlin-py"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "tqdm>=4.67.1",
+    "loguru>=0.7.3",
+    "protobuf>=6.32.1",
+    "pandas",
+    "nilmtk @ git+https://github.com/nilmtk/nilmtk.git",
+    "tmu @ git+https://github.com/cair/tmu.git",
+]
+
+[dependency-groups]
+dev = [
+    "matplotlib",
+    "pretty-confusion-matrix",
+    "jupyter",
+]
