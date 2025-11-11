@@ -7,6 +7,9 @@ from loguru import logger
 
 from detector import EdgeDetector
 
+TRAINING_DATA_DURATION = 48  # hours
+delta_time = pd.to_timedelta(TRAINING_DATA_DURATION, unit="h")
+
 def edge_detection(dataframe, noise_level=50, state_threshold=15):
     detector = None
     with tqdm(total=dataframe.shape[0]) as pbar:
@@ -65,10 +68,16 @@ for i in range(len(redd.buildings)):
         logger.warning(f"Building {building_id} does not have a fridge. Skipping...")
         continue
 
+    if 'microwave' not in appliance_names:
+        logger.warning(f"Building {building_id} does not have a microwave. Skipping...")
+        continue
+
+    # Get main meter data
     main_meter = building.mains()[1]
 
     start_time = main_meter.get_timeframe().start
-    end_time = main_meter.get_timeframe().end
+    end_time = main_meter.get_timeframe().start + delta_time
+    # end_time = main_meter.get_timeframe().end
 
     kw = {
         "sections": [TimeFrame(start=start_time, end=end_time)],
@@ -76,23 +85,51 @@ for i in range(len(redd.buildings)):
         "resample": True,
     }
 
-    # Get main meter data
     main_df = main_meter.power_series_all_data(**kw)
     main_df = main_df.to_frame().fillna(0)
 
     # Get fridge data
     fridge = building["fridge"]
+
+    # start_time = fridge.get_timeframe().start
+    # end_time = fridge.get_timeframe().end
+
+    # kw = {
+    #     "sections": [TimeFrame(start=start_time, end=end_time)],
+    #     "sample_period": 3,
+    #     "resample": True,
+    # }
+
     fridge_df = fridge.power_series_all_data(**kw)
     fridge_df = fridge_df.to_frame().fillna(0)
 
+    # Get microwave data
+    microwave = building["microwave"]
+
+    # start_time = microwave.get_timeframe().start
+    # end_time = microwave.get_timeframe().end
+
+    # kw = {
+    #     "sections": [TimeFrame(start=start_time, end=end_time)],
+    #     "sample_period": 3,
+    #     "resample": True,
+    # }
+    microwave_df = microwave.power_series_all_data(**kw)
+    microwave_df = microwave_df.to_frame().fillna(0)
+
     # Get edge detection results
     main_transient, main_steady = edge_detection(main_df, noise_level=80, state_threshold=15)
+
     fridge_transient, fridge_steady = edge_detection(fridge_df, noise_level=80, state_threshold=15)
+    microwave_transient, microwave_steady = edge_detection(microwave_df, noise_level=80, state_threshold=15)
 
     main_transient.to_csv(f"building_{building_id}_main_transients.csv", index=False)
     # main_steady.to_csv(f"building_{building_id}_main_steady_states.csv", index=False)
 
     fridge_transient.to_csv(f"building_{building_id}_fridge_transients.csv", index=False)
     # fridge_steady.to_csv(f"building_{building_id}_fridge_steady_states.csv", index=False)
+
+    microwave_transient.to_csv(f"building_{building_id}_microwave_transients.csv", index=False)
+    # microwave_steady.to_csv(f"building_{building_id}_microwave_steady_states.csv", index=False)
 
 redd.store.close()

@@ -716,6 +716,23 @@ wheels = [
 ]
 
 [[package]]
+name = "ipympl"
+version = "0.9.8"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "ipython" },
+    { name = "ipywidgets" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "pillow" },
+    { name = "traitlets" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c4/8c/f9e60abf409cef8234e66e69ce3fe263f1236b285f9105ea125e4660b77a/ipympl-0.9.8.tar.gz", hash = "sha256:6d7230d518384521093f3854f7db89d069dcd9c28a935b371e9c9f126354dee1", size = 58483988, upload-time = "2025-10-09T14:20:07.741Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b2/6e/9148bfed8ca535e4c61ce7843327c76ec7c63c40e33848ec03aa844a26af/ipympl-0.9.8-py3-none-any.whl", hash = "sha256:4a03612f77d92c9e2160c9e0d2a80b277e30387126399088f780dba9622247be", size = 515832, upload-time = "2025-10-09T14:20:05.39Z" },
+]
+
+[[package]]
 name = "ipython"
 version = "9.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2666,7 +2683,10 @@ name = "tsetlin-py"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "ipympl" },
+    { name = "jupyter" },
     { name = "loguru" },
+    { name = "matplotlib" },
     { name = "nilmtk" },
     { name = "pandas" },
     { name = "protobuf" },
@@ -2683,7 +2703,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ipympl", specifier = ">=0.9.8" },
+    { name = "jupyter", specifier = ">=1.1.1" },
     { name = "loguru", specifier = ">=0.7.3" },
+    { name = "matplotlib", specifier = ">=3.10.7" },
     { name = "nilmtk", git = "https://github.com/nilmtk/nilmtk.git" },
     { name = "pandas" },
     { name = "protobuf", specifier = ">=6.32.1" },

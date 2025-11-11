@@ -11,6 +11,9 @@ dependencies = [
     "pandas",
     "nilmtk @ git+https://github.com/nilmtk/nilmtk.git",
     "tmu @ git+https://github.com/cair/tmu.git",
+    "ipympl>=0.9.8",
+    "matplotlib>=3.10.7",
+    "jupyter>=1.1.1",
 ]
 
 [dependency-groups]

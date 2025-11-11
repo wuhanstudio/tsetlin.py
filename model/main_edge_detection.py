@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 from detector import EdgeDetector
 
-TRAINING_DATA_DURATION = 6  # hours
+TRAINING_DATA_DURATION = 48  # hours
 delta_time = pd.to_timedelta(TRAINING_DATA_DURATION, unit="h")
 
 def plot_edge_detection(dataframe, noise_level=50, state_threshold=15):
@@ -66,11 +66,11 @@ building_1 = redd.buildings[1].elec
 main_meter = building_1.mains()[1]
 
 # Get timeframe for training data
-# start_time = pd.Timestamp('2011-04-18 18:30:54-0400', tz='US/Eastern')
-# end_time = start_time + delta_time
-
 start_time = main_meter.get_timeframe().start
-end_time = main_meter.get_timeframe().end
+# start_time = pd.Timestamp('2011-04-18 18:30:54-0400', tz='US/Eastern')
+
+end_time = start_time + delta_time
+# end_time = main_meter.get_timeframe().end
 
 kw = {
     "sections": [TimeFrame(start=start_time, end=end_time)],
@@ -84,11 +84,18 @@ main_df = main_df.to_frame().fillna(0)
 
 # Get fridge data
 fridge = building_1["fridge"]
+
 fridge_df = fridge.power_series_all_data(**kw)
 fridge_df = fridge_df.to_frame().fillna(0)
+
+# Get microwave data
+microwave = building_1["microwave"]
+microwave_df = microwave.power_series_all_data(**kw)
+microwave_df = microwave_df.to_frame().fillna(0)
 
 # Plot edge detection results
 plot_edge_detection(main_df, noise_level=80, state_threshold=15)
 plot_edge_detection(fridge_df, noise_level=80, state_threshold=15)
+plot_edge_detection(microwave_df, noise_level=80, state_threshold=15)
 
 redd.store.close()
