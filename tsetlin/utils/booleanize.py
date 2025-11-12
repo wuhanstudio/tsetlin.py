@@ -21,14 +21,14 @@ def booleanize(x: float, num_bits: int=8) -> list[bool]:
 def booleanize_features(X, mean, std, num_bits: int=8):
     # Normalization to [0, 255]
     for i in range(len(X)):
-            for j in range(len(X[i])):
-                if isinstance(mean, list) and isinstance(std, list):
-                    X[i][j] = (X[i][j] - mean[j]) / std[j]
-                else:
-                    X[i][j] = (X[i][j] - mean) / std
+        for j in range(len(X[i])):
+            if isinstance(mean, list) and isinstance(std, list):
+                X[i][j] = (X[i][j] - mean[j]) / std[j]
+            else:
+                X[i][j] = (X[i][j] - mean) / std
 
-                # Map to [0, 1] using CDF of standard normal distribution
-                X[i][j] = norm_cdf(X[i][j])
+            # Map to [0, 1] using CDF of standard normal distribution
+            X[i][j] = norm_cdf(X[i][j])
 
     # Mistake: Shouldn't do this
     # X = [[int(x* 255) for x in row] for row in X]

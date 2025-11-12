@@ -1,0 +1,109 @@
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix
+
+from tsetlin import Tsetlin
+from tsetlin.utils import booleanize_features
+from tsetlin.utils.tqdm import m_tqdm
+from tsetlin.utils.log import log
+
+building_1 = pd.read_csv("model/building_1_main_transients_train.csv")
+
+X = building_1[["transition", "duration"]]
+
+# y = building_1["microwave_label"]
+y = building_1["fridge_label"]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+y_train = y_train.to_numpy()
+y_test = y_test.to_numpy()
+
+N_BIT = 8  # Number of bits for booleanization
+N_CLAUSE = 100  # Number of clauses
+N_STATE = 30  # Number of states per automaton
+N_EPOCHS = 10  # Number of training epochs
+T = 20  # Threshold
+s = 5.0  # Specificity
+
+log(f"Using {N_BIT} bits for booleanization")
+log(f"Number of clauses: {N_CLAUSE}, Number of states: {N_STATE}")
+log(f"Threshold T: {T}, Specificity s: {s}")
+
+# Normalization
+X_mean =  X.mean().to_numpy().tolist()
+X_std = X.std().to_numpy().tolist()
+
+X_train = booleanize_features(X_train.to_numpy(), X_mean, X_std, num_bits=N_BIT)
+X_test = booleanize_features(X_test.to_numpy(), X_mean, X_std, num_bits=N_BIT)
+
+tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=10, N_clause=N_CLAUSE, N_state=N_STATE)
+
+y_pred = tsetlin.predict(X_test)
+accuracy = sum(y_pred == y_test) / len(y_test)
+
+for epoch in range(N_EPOCHS):
+    log(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
+    for i in m_tqdm(range(len(X_train))):
+        tsetlin.step(X_train[i], y_train[i], T=T, s=s)
+
+    y_pred = tsetlin.predict(X_train)
+    accuracy = sum(y_pred == y_train) / len(y_train)
+
+log("")
+
+# Final evaluation
+y_pred = tsetlin.predict(X_test)
+accuracy = sum(y_pred == y_test) / len(y_test)
+
+log(f"Test Accuracy: {accuracy * 100:.2f}%")
+
+# Save the model
+tsetlin.save_model("tsetlin_model_redd.pb", type="training")
+log("Model saved to tsetlin_model_redd.pb")
+
+log("")
+
+# Load the model
+n_tsetlin = Tsetlin.load_model("tsetlin_model_redd.pb")
+log("Model loaded from tsetlin_model_redd.pb")
+
+# Evaluate the loaded model
+n_y_pred = n_tsetlin.predict(X_test)
+accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(n_y_pred, y_test)]) / len(y_test)
+
+log(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
+
+# Random Forest Classifier
+# from sklearn.ensemble import RandomForestClassifier
+
+# print("Random Forest Classifier Results:")
+# rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+# rf_model.fit(X_train, y_train)
+# y_pred = rf_model.predict(X_test)
+
+# print(confusion_matrix(y_test, y_pred))
+# print(classification_report(y_test, y_pred))
+
+# Decision Tree Classifier
+# from sklearn.tree import DecisionTreeClassifier
+
+# print("Decision Tree Classifier Results:")
+# dt_model = DecisionTreeClassifier(random_state=42)
+# dt_model.fit(X_train, y_train)
+# y_pred = dt_model.predict(X_test)
+
+# print(confusion_matrix(y_test, y_pred))
+# print(classification_report(y_test, y_pred))
+
+# Support Vector Classifier
+# from sklearn.svm import SVC
+
+# print("Support Vector Classifier Results:")
+# svc_model = SVC(kernel='linear', random_state=42)
+# svc_model.fit(X_train, y_train)
+# y_pred = svc_model.predict(X_test)
+
+# print(confusion_matrix(y_test, y_pred))
+# print(classification_report(y_test, y_pred))

@@ -129,6 +129,6 @@ if __name__ == "__main__":
 
             # Evaluate the loaded model
             n_y_pred = n_tsetlin.predict(X_test)
-            accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(y_pred, y_test)]) / len(y_test)
+            accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(n_y_pred, y_test)]) / len(y_test)
 
             log(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")

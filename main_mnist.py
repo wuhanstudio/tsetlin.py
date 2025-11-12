@@ -51,8 +51,6 @@ if __name__ == "__main__":
     # Normalization (not really needed for MNIST)
     X_train = booleanize_features(X_train, 0, 1.0, num_bits=N_BIT)
     X_test = booleanize_features(X_test, 0, 1.0, num_bits=N_BIT)
-    y_train = y_train
-    y_test = y_test
 
     tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=10, N_clause=N_CLAUSE, N_state=N_STATE)
 
