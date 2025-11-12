@@ -1,5 +1,17 @@
 edition = "2023";
 
+enum ModelType {
+    INFERENCE = 0;
+    TRAINING = 1;
+}
+
+message Clause {
+    uint32 n_feature = 1;
+    uint32 n_state   = 2;
+
+    repeated uint32 data = 3;
+}
+
 message Tsetlin {
     uint32 n_class   = 1;
     uint32 n_feature = 2;
@@ -9,16 +21,4 @@ message Tsetlin {
     ModelType model_type = 5;
 
     repeated Clause clauses = 6;
-
-    enum ModelType {
-        INFERENCE = 0;
-        TRAINING = 1;
-  }
-}
-
-message Clause {
-    uint32 n_feature = 1;
-    uint32 n_state   = 2;
-
-    repeated uint32 data = 3;
 }

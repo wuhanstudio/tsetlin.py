@@ -21,10 +21,10 @@ y_train = y_train.to_numpy()
 y_test = y_test.to_numpy()
 
 N_BIT = 8  # Number of bits for booleanization
-N_CLAUSE = 100  # Number of clauses
-N_STATE = 30  # Number of states per automaton
+N_CLAUSE = 20  # Number of clauses
+N_STATE = 10  # Number of states per automaton
 N_EPOCHS = 10  # Number of training epochs
-T = 20  # Threshold
+T = 10  # Threshold
 s = 5.0  # Specificity
 
 log(f"Using {N_BIT} bits for booleanization")
@@ -38,7 +38,7 @@ X_std = X.std().to_numpy().tolist()
 X_train = booleanize_features(X_train.to_numpy(), X_mean, X_std, num_bits=N_BIT)
 X_test = booleanize_features(X_test.to_numpy(), X_mean, X_std, num_bits=N_BIT)
 
-tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=10, N_clause=N_CLAUSE, N_state=N_STATE)
+tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=2, N_clause=N_CLAUSE, N_state=N_STATE)
 
 y_pred = tsetlin.predict(X_test)
 accuracy = sum(y_pred == y_test) / len(y_test)
@@ -60,14 +60,20 @@ accuracy = sum(y_pred == y_test) / len(y_test)
 log(f"Test Accuracy: {accuracy * 100:.2f}%")
 
 # Save the model
-tsetlin.save_model("tsetlin_model_redd.pb", type="training")
-log("Model saved to tsetlin_model_redd.pb")
+model_name = "tsetlin_model_redd"
+tsetlin.save_model(f"{model_name}.pb", type="training")
+tsetlin.save_umodel(f"{model_name}.upb")
+log(f"Model saved to {model_name}.pb")
 
 log("")
 
 # Load the model
-n_tsetlin = Tsetlin.load_model("tsetlin_model_redd.pb")
-log("Model loaded from tsetlin_model_redd.pb")
+n_tsetlin = Tsetlin.load_model(f"{model_name}.pb")
+log(f"Model loaded from {model_name}.pb")
+
+# Load the micropython model
+# n_tsetlin = Tsetlin.load_umodel(f"{model_name}.upb")
+# log(f"Model loaded from {model_name}.upb")
 
 # Evaluate the loaded model
 n_y_pred = n_tsetlin.predict(X_test)

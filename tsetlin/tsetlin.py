@@ -1,3 +1,4 @@
+import os
 import random
 
 from tsetlin.clause import Clause
@@ -128,6 +129,49 @@ class Tsetlin:
 
         return tm_model
 
+    @staticmethod
+    def load_umodel(path):
+        # Load micropython model
+        import tsetlin_upb2
+    
+        tm = None
+        with open(path, "rb") as f:
+            tm = tsetlin_upb2.Tsetlin.decode(f.read())
+            tm.clause = tm.clause[0]
+
+        if tm is None:
+            raise ValueError("Failed to decode the model file.")
+
+        tm_model = Tsetlin(N_feature=tm.n_feature, N_class=tm.n_class, N_clause=tm.n_clause, N_state=tm.n_state)
+        tm_model.n_classes = tm.n_class
+        tm_model.n_features = tm.n_feature
+        tm_model.n_clauses = tm.n_clause
+        tm_model.n_states = tm.n_state
+
+        tm_model.pos_clauses = []
+        tm_model.neg_clauses = []
+        for i in range(tm_model.n_classes):
+            pos_clauses = []
+            neg_clauses = []
+            for j in range(tm_model.n_clauses // 2):
+                p_clause = tm.clause[(i * tm_model.n_clauses * tm_model.n_features * 2 + j * 2 * tm_model.n_features * 2): (i * tm_model.n_clauses * tm_model.n_features * 2 + j * 2 * tm_model.n_features * 2 + tm_model.n_features * 2)]
+                n_clause = tm.clause[(i * tm_model.n_clauses * tm_model.n_features * 2 + j * 2 * tm_model.n_features * 2 + tm_model.n_features * 2): (i * tm_model.n_clauses * tm_model.n_features * 2 + j * 2 * tm_model.n_features * 2 + tm_model.n_features * 4)]
+
+                # Set positive clauses
+                pos_clause = Clause(tm_model.n_features, tm_model.n_states)
+                pos_clause.set_state(p_clause)
+                pos_clauses.append(pos_clause)
+
+                # Set negative clauses
+                neg_clause = Clause(tm_model.n_features, tm_model.n_states)
+                neg_clause.set_state(n_clause)
+                neg_clauses.append(neg_clause)
+
+            tm_model.pos_clauses.append(pos_clauses)
+            tm_model.neg_clauses.append(neg_clauses)
+
+        return tm_model
+
     def save_model(self, path, type="training"):
         import tsetlin_pb2
         tm = tsetlin_pb2.Tsetlin()
@@ -167,3 +211,33 @@ class Tsetlin:
 
         with open(path, "wb") as f:
             f.write(tm.SerializeToString())
+
+
+    def save_umodel(self, path, type="training"):
+        # Save micropython model
+        import tsetlin_upb2
+        tm = tsetlin_upb2.Tsetlin()
+
+        tm.n_class = self.n_classes
+        tm.n_feature = self.n_features
+        tm.n_clause = self.n_clauses
+        tm.n_state = self.n_states
+
+        if type not in ["training", "inference"]:
+            raise ValueError("type must be either 'training' or 'inference'")
+        
+        clause = []
+        for i in range(self.n_classes):
+            for j in range(self.n_clauses // 2):
+                # Positive clauses
+                for v in [to_int32(x) for x in self.pos_clauses[i][j].get_state()]:
+                    clause.append(v)
+
+                # Negative clauses
+                for v in [to_int32(x) for x in self.neg_clauses[i][j].get_state()]:
+                    clause.append(v)
+
+        tm.clause = clause
+
+        with open(path, "wb") as f:
+            f.write(tm.encode())
