@@ -13,9 +13,17 @@ mains = building_1.elec.mains()
 main_meter_0 = mains.meters[0]
 
 main_meter_0_df = list(main_meter_0.load(sample_period=SAMPLE_PERIOD))[0]
-main_meter_0_df.dropna(inplace=True)
+main_meter_0_df = main_meter_0_df.fillna(0)
 
-# main_meter_0_df = main_meter_0_df.iloc[0:(len(main_meter_0_df) // 2)]
+main_meter_0_df = main_meter_0_df.iloc[0:(len(main_meter_0_df) // 4)]
+
+# Get fridge data
+fridge = redd.buildings[1].elec["fridge"]
+
+fridge_df = list(fridge.load(sample_period=SAMPLE_PERIOD))[0]
+fridge_df = fridge_df.fillna(0)
+
+fridge_df = fridge_df.iloc[0:(len(fridge_df) // 4)]
 
 output_file = open('main.bin', 'wb')
 main_meter_0_data = main_meter_0_df.values.flatten()
@@ -24,6 +32,14 @@ output_file.close()
 
 logger.info(f"Wrote {len(main_meter_0_data)} * {main_meter_0_data.itemsize} samples to main.bin")
 
+output_file = open('fridge.bin', 'wb')
+fridge_data = fridge_df.values.flatten()
+fridge_data.tofile(output_file)
+output_file.close()
+
+logger.info(f"Wrote {len(fridge_data)} * {fridge_data.itemsize} samples to fridge.bin")
+
+# Verification step
 input_file = open('main.bin', 'rb')
 
 # logger.info(f"Read {len(main_meter_0_data_from_file)} samples from main.bin")
@@ -38,4 +54,16 @@ for i in tqdm(range(len(main_meter_0_data))):
     assert np.isclose(sample, main_meter_0_data[i]), f"Data mismatch at index {i}, {sample} != {main_meter_0_data[i]}"
 
 input_file.close()
+
+# Verification fridge data
+input_file = open('fridge.bin', 'rb')
+logger.info("Verifying fridge data integrity...")
+for i in tqdm(range(len(fridge_data))):
+    input_file.seek(i * fridge_data.itemsize)
+    sample = np.fromfile(input_file, dtype=fridge_data.dtype, count=1)[0]
+
+    assert np.isclose(sample, fridge_data[i]), f"Data mismatch at index {i}, {sample} != {fridge_data[i]}"
+
+input_file.close()
+
 redd.store.close()

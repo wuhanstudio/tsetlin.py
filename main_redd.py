@@ -35,6 +35,9 @@ log(f"Threshold T: {T}, Specificity s: {s}")
 X_mean =  X.mean().to_numpy().tolist()
 X_std = X.std().to_numpy().tolist()
 
+log(f"Feature means: {X_mean}")
+log(f"Feature stds: {X_std}")
+
 X_train = booleanize_features(X_train.to_numpy(), X_mean, X_std, num_bits=N_BIT)
 X_test = booleanize_features(X_test.to_numpy(), X_mean, X_std, num_bits=N_BIT)
 
