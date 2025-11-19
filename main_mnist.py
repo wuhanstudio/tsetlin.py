@@ -1,6 +1,7 @@
 import argparse
 
 import mnist
+import numpy as np
 
 from tsetlin import Tsetlin
 from tsetlin.utils import booleanize_features
@@ -15,6 +16,26 @@ y_train = mnist.train_labels()
 
 X_test = mnist.test_images()
 y_test = mnist.test_labels()
+
+def balance_dataset(X_train, y_train, num_per_class=1000):
+    indices = []
+
+    for cls in np.unique(y_train):
+        cls_idx = np.where(y_train == cls)[0]
+        chosen = np.random.choice(cls_idx, num_per_class, replace=False)
+        indices.extend(chosen)
+
+    indices = np.array(indices)
+    np.random.shuffle(indices)
+    return indices
+
+indices = balance_dataset(X_train, y_train, num_per_class=100)
+X_train = X_train[indices]
+y_train = y_train[indices]
+
+indices = balance_dataset(X_test, y_test, num_per_class=20)
+X_test = X_test[indices]
+y_test = y_test[indices]
 
 log(f"Train images shape: {X_train.shape}, Train labels shape: {y_train.shape}")
 log(f"Test images shape: {X_test.shape}, Test labels shape: {y_test.shape}")
@@ -62,7 +83,7 @@ if __name__ == "__main__":
         for i in m_tqdm(range(len(X_train))):
             tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s)
 
-        # y_pred = tsetlin.predict(X_train)
+        y_pred = tsetlin.predict(X_train)
         accuracy = sum(y_pred == y_train) / len(y_train)
 
     # tsetlin.fit(X_train, y_train, T=15, s=3, epochs=EPOCHS)
