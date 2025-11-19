@@ -21,10 +21,10 @@ y_train = y_train.to_numpy()
 y_test = y_test.to_numpy()
 
 N_BIT = 8  # Number of bits for booleanization
-N_CLAUSE = 20  # Number of clauses
-N_STATE = 10  # Number of states per automaton
+N_CLAUSE = 200  # Number of clauses
+N_STATE = 100  # Number of states per automaton
 N_EPOCHS = 10  # Number of training epochs
-T = 10  # Threshold
+T = 100  # Threshold
 s = 5.0  # Specificity
 
 log(f"Using {N_BIT} bits for booleanization")
