@@ -1,0 +1,3 @@
+[submodule "model/redd"]
+	path = model/redd
+	url = https://github.com/wuhanstudio/redd
