@@ -717,6 +717,19 @@ wheels = [
 ]
 
 [[package]]
+name = "mpremote"
+version = "1.26.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "platformdirs" },
+    { name = "pyserial" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9c/ff/e54b17cb43b1b81a4267de73079b964f4bccf7762039e7c3fb12db21294a/mpremote-1.26.1.tar.gz", hash = "sha256:61a39bf5af502e1ec56d1b28bf067766c3a0daea9d7487934cb472e378a12fe1", size = 31519, upload-time = "2025-09-11T04:30:29.019Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a2/6e/22be76beaafe24be49f26f8c8b7dfe06e2e5e67b810da1d62e1bf9d53c16/mpremote-1.26.1-py3-none-any.whl", hash = "sha256:39251644305be718c52bc5965315adc4ae824901750abf6a3fb63683234df05c", size = 36180, upload-time = "2025-09-11T04:30:27.336Z" },
+]
+
+[[package]]
 name = "msgpack"
 version = "1.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1207,6 +1220,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pyserial"
+version = "3.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/1e/7d/ae3f0a63f41e4d2f6cb66a5b57197850f919f59e558159a4dd3a818f5082/pyserial-3.5.tar.gz", hash = "sha256:3c77e014170dfffbd816e6ffc205e9842efb10be9f58ec16d3e8675b4925cddb", size = 159125, upload-time = "2020-11-23T03:59:15.045Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/07/bc/587a445451b253b285629263eb51c2d8e9bcea4fc97826266d186f96f558/pyserial-3.5-py2.py3-none-any.whl", hash = "sha256:c4451db6ba391ca6ca299fb3ec7bae67a5c55dde170964c7a14ceefec02f2cf0", size = 90585, upload-time = "2020-11-23T03:59:13.41Z" },
+]
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 source = { registry = "https://pypi.org/simple" }
@@ -1415,6 +1437,7 @@ dependencies = [
     { name = "flask" },
     { name = "loguru" },
     { name = "matplotlib" },
+    { name = "mpremote" },
     { name = "nilmtk" },
     { name = "requests" },
 ]
@@ -1424,6 +1447,7 @@ requires-dist = [
     { name = "flask", specifier = ">=3.1.2" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "matplotlib", specifier = ">=3.10.6" },
+    { name = "mpremote", specifier = ">=1.26.1" },
     { name = "nilmtk", git = "https://github.com/nilmtk/nilmtk.git" },
     { name = "requests", specifier = ">=2.32.5" },
 ]
