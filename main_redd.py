@@ -8,6 +8,9 @@ from tsetlin.utils import booleanize_features
 from tsetlin.utils.tqdm import m_tqdm
 from tsetlin.utils.log import log
 
+N_BIT = 8  # Number of bits for booleanization
+N_EPOCHS = 10  # Number of training epochs
+
 building_1 = pd.read_csv("model/building_1_main_transients_train.csv")
 
 X = building_1[["transition", "duration"]]
@@ -20,69 +23,103 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 y_train = y_train.to_numpy()
 y_test = y_test.to_numpy()
 
-N_BIT = 8  # Number of bits for booleanization
-N_CLAUSE = 200  # Number of clauses
-N_STATE = 100  # Number of states per automaton
-N_EPOCHS = 10  # Number of training epochs
-T = 100  # Threshold
-s = 5.0  # Specificity
-
-log(f"Using {N_BIT} bits for booleanization")
-log(f"Number of clauses: {N_CLAUSE}, Number of states: {N_STATE}")
-log(f"Threshold T: {T}, Specificity s: {s}")
-
 # Normalization
 X_mean =  X.mean().to_numpy().tolist()
 X_std = X.std().to_numpy().tolist()
 
-log(f"Feature means: {X_mean}")
-log(f"Feature stds: {X_std}")
-
 X_train = booleanize_features(X_train.to_numpy(), X_mean, X_std, num_bits=N_BIT)
 X_test = booleanize_features(X_test.to_numpy(), X_mean, X_std, num_bits=N_BIT)
 
-tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=2, N_clause=N_CLAUSE, N_state=N_STATE)
+def objective(trial):
+    n_state = trial.suggest_int("n_state", 2, 100, step=2)
+    n_clause = trial.suggest_int("n_clause", 2, 100, step=2)
 
-y_pred = tsetlin.predict(X_test)
-accuracy = sum(y_pred == y_test) / len(y_test)
+    T = trial.suggest_int("T", 1, n_state)
+    s = trial.suggest_float("s", 1.0, 10.0, step=0.1)
 
-for epoch in range(N_EPOCHS):
-    log(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
-    for i in m_tqdm(range(len(X_train))):
-        tsetlin.step(X_train[i], y_train[i], T=T, s=s)
+    tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=2, N_clause=n_clause, N_state=n_state)
 
-    y_pred = tsetlin.predict(X_train)
-    accuracy = sum(y_pred == y_train) / len(y_train)
+    for epoch in range(N_EPOCHS):
+        for i in m_tqdm(range(len(X_train))):
+            tsetlin.step(X_train[i], y_train[i], T=T, s=s)
 
-log("")
+    y_pred = tsetlin.predict(X_test)
+    
+    accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(y_pred, y_test)]) / len(y_test)
 
-# Final evaluation
-y_pred = tsetlin.predict(X_test)
-accuracy = sum(y_pred == y_test) / len(y_test)
+    return (1.0 - accuracy)
 
-log(f"Test Accuracy: {accuracy * 100:.2f}%")
+if True:
+    import optuna
+    
+    # Create a new study.
+    # study = optuna.create_study()
 
-# Save the model
-model_name = "tsetlin_model_redd"
-tsetlin.save_model(f"{model_name}.pb", type="training")
-tsetlin.save_umodel(f"{model_name}.upb")
-log(f"Model saved to {model_name}.pb")
+    study = optuna.create_study(
+        storage="sqlite:///db.sqlite3",  # Specify the storage URL here.
+        study_name="tsetlin-machine-redd",
+        load_if_exists="True"
+    )
+    
+    # Invoke optimization of the objective function.
+    study.optimize(objective, n_trials=100)  
 
-log("")
+    print(f"Best value: {study.best_value} (params: {study.best_params})")
+else:
+    N_CLAUSE = 200  # Number of clauses
+    N_STATE = 100  # Number of states per automaton
+    T = 100  # Threshold
+    s = 5.0  # Specificity
 
-# Load the model
-n_tsetlin = Tsetlin.load_model(f"{model_name}.pb")
-log(f"Model loaded from {model_name}.pb")
+    log(f"Using {N_BIT} bits for booleanization")
+    log(f"Number of clauses: {N_CLAUSE}, Number of states: {N_STATE}")
+    log(f"Threshold T: {T}, Specificity s: {s}")
 
-# Load the micropython model
-# n_tsetlin = Tsetlin.load_umodel(f"{model_name}.upb")
-# log(f"Model loaded from {model_name}.upb")
+    log(f"Feature means: {X_mean}")
+    log(f"Feature stds: {X_std}")
 
-# Evaluate the loaded model
-n_y_pred = n_tsetlin.predict(X_test)
-accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(n_y_pred, y_test)]) / len(y_test)
+    tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=2, N_clause=N_CLAUSE, N_state=N_STATE)
 
-log(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
+    y_pred = tsetlin.predict(X_test)
+    accuracy = sum(y_pred == y_test) / len(y_test)
+
+    for epoch in range(N_EPOCHS):
+        log(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
+        for i in m_tqdm(range(len(X_train))):
+            tsetlin.step(X_train[i], y_train[i], T=T, s=s)
+
+        y_pred = tsetlin.predict(X_train)
+        accuracy = sum(y_pred == y_train) / len(y_train)
+
+    log("")
+
+    # Final evaluation
+    y_pred = tsetlin.predict(X_test)
+    accuracy = sum(y_pred == y_test) / len(y_test)
+
+    log(f"Test Accuracy: {accuracy * 100:.2f}%")
+
+    # Save the model
+    model_name = "tsetlin_model_redd"
+    tsetlin.save_model(f"{model_name}.pb", type="training")
+    tsetlin.save_umodel(f"{model_name}.upb")
+    log(f"Model saved to {model_name}.pb")
+
+    log("")
+
+    # Load the model
+    n_tsetlin = Tsetlin.load_model(f"{model_name}.pb")
+    log(f"Model loaded from {model_name}.pb")
+
+    # Load the micropython model
+    # n_tsetlin = Tsetlin.load_umodel(f"{model_name}.upb")
+    # log(f"Model loaded from {model_name}.upb")
+
+    # Evaluate the loaded model
+    n_y_pred = n_tsetlin.predict(X_test)
+    accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(n_y_pred, y_test)]) / len(y_test)
+
+    log(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
 
 # Random Forest Classifier
 # from sklearn.ensemble import RandomForestClassifier
