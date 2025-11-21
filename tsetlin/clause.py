@@ -84,9 +84,9 @@ class Clause:
                     #         self.n_automata[i].reward()
 
                     # Original paper implementation
-                    if (self.p_automata[i].action() == 0) and (X[i] == 0): 
+                    if (X[i] == 0) and (self.p_automata[i].action() == 0): 
                         self.p_automata[i].reward()
-                    elif (self.n_automata[i].action() == 0) and (X[i] == 1):
+                    elif (X[i] == 1) and (self.n_automata[i].action() == 0):
                         self.n_automata[i].reward()
     
     def set_state(self, states):

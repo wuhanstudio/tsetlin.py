@@ -46,9 +46,13 @@ class Tsetlin:
 
         # Pair 1: Target class
         class_sum = 0
+        pos_clauses = [0] * int(self.n_clauses / 2)
+        neg_clauses = [0] * int(self.n_clauses / 2)
         for i in range(int(self.n_clauses / 2)):
-            class_sum += self.pos_clauses[y_target][i].evaluate(X)
-            class_sum -= self.neg_clauses[y_target][i].evaluate(X)
+            pos_clauses[i] = self.pos_clauses[y_target][i].evaluate(X)
+            neg_clauses[i] = self.neg_clauses[y_target][i].evaluate(X)
+            class_sum += pos_clauses[i]
+            class_sum -= neg_clauses[i]
 
         # Clamp class_sum to [-T, T]
         class_sum = clip(class_sum, -T, T)
@@ -60,18 +64,22 @@ class Tsetlin:
         for i in range(int(self.n_clauses / 2)):
             if (random.random() <= c1):
                 # Positive Clause: Type I Feedback
-                self.pos_clauses[y_target][i].update(X, 1, self.pos_clauses[y_target][i].evaluate(X), s=s)
+                self.pos_clauses[y_target][i].update(X, 1, pos_clauses[i], s=s)
             if (random.random() <= c1):
                 # Negative Clause: Type II Feedback
-                self.neg_clauses[y_target][i].update(X, 0, self.neg_clauses[y_target][i].evaluate(X), s=s)
+                self.neg_clauses[y_target][i].update(X, 0, neg_clauses[i], s=s)
 
         # Pair 2: Non-target classes
         other_class = random.choice([x for x in range(self.n_classes) if x != y_target])
 
         class_sum = 0
+        pos_clauses = [0] * int(self.n_clauses / 2)
+        neg_clauses = [0] * int(self.n_clauses / 2)
         for i in range(int(self.n_clauses / 2)):
-            class_sum += self.pos_clauses[other_class][i].evaluate(X)
-            class_sum -= self.neg_clauses[other_class][i].evaluate(X)
+            pos_clauses[i] = self.pos_clauses[other_class][i].evaluate(X)
+            neg_clauses[i] = self.neg_clauses[other_class][i].evaluate(X)
+            class_sum += pos_clauses[i]
+            class_sum -= neg_clauses[i]
 
         # Clamp class_sum to [-T, T]
         class_sum = clip(class_sum, -T, T)
@@ -81,10 +89,10 @@ class Tsetlin:
         for i in range(int(self.n_clauses / 2)):
             if (random.random() <= c2):
                 # Positive Clause: Type II Feedback
-                self.pos_clauses[other_class][i].update(X, 0, self.pos_clauses[other_class][i].evaluate(X), s=s)
+                self.pos_clauses[other_class][i].update(X, 0, pos_clauses[i], s=s)
             if (random.random() <= c2):
                 # Negative Clause: Type I Feedback
-                self.neg_clauses[other_class][i].update(X, 1, self.neg_clauses[other_class][i].evaluate(X), s=s)
+                self.neg_clauses[other_class][i].update(X, 1, neg_clauses[i], s=s)
 
     def fit(self, X, y, T, s, epochs):
         for epoch in m_tqdm(range(epochs), desc="Training Epochs"):

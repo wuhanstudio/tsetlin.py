@@ -10,8 +10,10 @@ from tsetlin.utils import booleanize_features
 from tsetlin.utils.tqdm import m_tqdm
 from tsetlin.utils.log import log
 
+from pyinstrument import Profiler
+
 N_BIT = 8  # Number of bits for booleanization
-N_EPOCHS = 10  # Number of training epochs
+N_EPOCHS = 3  # Number of training epochs
 
 TRAIN_BUILDING = [1, 2, 3]
 TEST_BUIULDING = [5]
@@ -92,6 +94,9 @@ else:
     y_pred = tsetlin.predict(X_test)
     accuracy = sum(y_pred == y_test) / len(y_test)
 
+    profiler = Profiler()
+    profiler.start()
+
     for epoch in range(N_EPOCHS):
         log(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
         for i in m_tqdm(range(len(X_train))):
@@ -99,6 +104,9 @@ else:
 
         y_pred = tsetlin.predict(X_train)
         accuracy = sum(y_pred == y_train) / len(y_train)
+
+    profiler.stop()
+    profiler.print()
 
     log("")
 
