@@ -131,7 +131,6 @@ else:
             tsetlin.step(X_train[i], y_train[i], T=T, s=s)
 
         y_pred = tsetlin.predict(X_train)
-
         accuracy = sum(y_pred == y_train) / len(y_train)
 
     profiler.stop()
