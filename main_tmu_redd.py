@@ -16,6 +16,18 @@ N_EPOCHS = 10  # Number of training epochs
 TRAIN_BUILDING = [1, 2, 3]
 TEST_BUIULDING = [5]
 
+def balance_dataset(X_train, y_train, num_per_class=1000):
+    indices = []
+
+    for cls in np.unique(y_train):
+        cls_idx = np.where(y_train == cls)[0]
+        chosen = np.random.choice(cls_idx, num_per_class, replace=False)
+        indices.extend(chosen)
+
+    indices = np.array(indices)
+    np.random.shuffle(indices)
+    return indices
+
 train_files = [f"building_{building}_main_transients_train.csv" for building in TRAIN_BUILDING]
 test_files = [f"building_{building}_main_transients_train.csv" for building in TEST_BUIULDING]
 
@@ -36,8 +48,24 @@ y_test = y_test.to_numpy()
 X_mean = pd.concat([X_train, X_test]).mean().to_list()
 X_std = pd.concat([X_train, X_test]).std().to_list()
 
-X_train = booleanize_features(X_train.to_numpy(), X_mean, X_std, num_bits=N_BIT)
-X_test = booleanize_features(X_test.to_numpy(), X_mean, X_std, num_bits=N_BIT)
+# Balance the training dataset
+max_num = min(np.bincount(y_train))
+
+indices = balance_dataset(X_train, y_train, num_per_class=max_num)
+X_train = X_train.to_numpy()[indices]
+y_train = y_train[indices]
+
+# Balance the testing dataset
+max_num = min(np.bincount(y_test))
+indices = balance_dataset(X_test, y_test, num_per_class=max_num)
+X_test = X_test.to_numpy()[indices]
+y_test = y_test[indices]
+
+logger.info(f"Train images shape: {X_train.shape}, Train labels shape: {y_train.shape}")
+logger.info(f"Test images shape: {X_test.shape}, Test labels shape: {y_test.shape}")
+
+X_train = booleanize_features(X_train, X_mean, X_std, num_bits=N_BIT)
+X_test = booleanize_features(X_test, X_mean, X_std, num_bits=N_BIT)
 
 data = {}
 data['x_train'] = np.array(X_train)
