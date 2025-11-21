@@ -20,18 +20,15 @@ class Clause:
             self.n_automata[i].state = N_state // 2 + (1 - choice)
 
     def evaluate(self, X):
-        output = 1
         for i in range(self.N_feature):
             # Include positive literal, but feature is 0
-            if self.p_automata[i].action() == 1 and X[i] == 0:
-                output = 0
-                break
+            if X[i] == 0 and self.p_automata[i].action() == 1:
+                return 0
             # TODO: This may be redundant
             # Include negative literal, but feature is 1
-            if self.n_automata[i].action() == 1 and X[i] == 1:
-                output = 0
-                break
-        return output
+            if  X[i] == 1 and self.n_automata[i].action() == 1:
+                return 0
+        return 1
 
     def update(self, X, match_target, clause_output, s):
         # TODO: Sanity Check: Both X and NOT X should not be included

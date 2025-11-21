@@ -4,7 +4,6 @@ random.seed(0)
 
 import argparse
 
-
 from iris import load_iris_X_y
 
 from tsetlin import Tsetlin
@@ -15,6 +14,8 @@ from tsetlin.utils.tqdm import m_tqdm
 from tsetlin.utils.log import log
 
 from tsetlin.utils.split import train_test_split
+
+from pyinstrument import Profiler
 
 # Example usage
 X, y = load_iris_X_y('iris.csv')
@@ -98,6 +99,9 @@ if __name__ == "__main__":
         y_pred = tsetlin.predict(X_test)
         accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(y_pred, y_test)]) / len(y_test)
 
+        profiler = Profiler()
+        profiler.start()
+
         for epoch in range(N_EPOCHS):
             log(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
             for i in m_tqdm(range(len(X_train))):
@@ -107,6 +111,9 @@ if __name__ == "__main__":
             accuracy = sum([ 1 if pred == train else 0 for pred, train in zip(y_pred, y_train)]) / len(y_train)
 
         # tsetlin.fit(X_train, y_train, T=15, s=3, epochs=EPOCHS)
+
+        profiler.stop()
+        profiler.print()
 
         log("")
 
