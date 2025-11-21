@@ -1,4 +1,4 @@
-import os
+import sys
 import random
 
 from tsetlin.clause import Clause
@@ -42,7 +42,7 @@ class Tsetlin:
             for clause in self.neg_clauses[c]:
                 clause.unfreeze()
 
-    def predict(self, X, return_votes=False):
+    def predict(self, X, return_votes=False, n_jobs=8):
         y_pred = []
         votes_list = []
         for i in m_tqdm(range(len(X)), desc="Evaluating"):
@@ -53,7 +53,6 @@ class Tsetlin:
                     votes[c] -= self.neg_clauses[c][j].evaluate(X[i])
             y_pred.append(argmax(votes))
             votes_list.append(votes)
-
         if return_votes:
             return y_pred, votes_list
         else:

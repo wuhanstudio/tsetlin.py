@@ -5,13 +5,19 @@ class Automaton:
         self.N_state = N_state
         self.state = state
 
-    def action(self):
+        self.action = self._action()
+
+    def _action(self):
         return 1 if (self.state > (self.N_state // 2)) else 0
 
     def reward(self):
         if self.state < self.N_state:
             self.state += 1
-
+            self.action = self._action()
     def penalty(self):
         if self.state > 1:
             self.state -= 1
+            self.action = self._action()
+    
+    def update(self):
+        self.action = self._action()

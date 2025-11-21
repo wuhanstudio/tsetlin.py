@@ -23,8 +23,8 @@ class Clause:
 
     def freeze(self):
         self.frozen = True
-        self.p_actions = [p.action() for p in self.p_automata]
-        self.n_actions = [n.action() for n in self.n_automata]
+        self.p_actions = [p.action for p in self.p_automata]
+        self.n_actions = [n.action for n in self.n_automata]
 
     def unfreeze(self):
         self.p_actions = []
@@ -43,17 +43,17 @@ class Clause:
         else:
             for i in range(self.N_feature):
                 # Include positive literal, but feature is 0
-                if X[i] == 0 and self.p_automata[i].action() == 1:
+                if X[i] == 0 and self.p_automata[i].action == 1:
                     return 0
                 # TODO: This may be redundant
                 # Include negative literal, but feature is 1
-                if  X[i] == 1 and self.n_automata[i].action() == 1:
+                if  X[i] == 1 and self.n_automata[i].action == 1:
                     return 0
             return 1
 
     def update(self, X, match_target, clause_output, s):
         # TODO: Sanity Check: Both X and NOT X should not be included
-        # if sum([ (self.p_automata[i].action()) & (self.n_automata[i].action()) for i in range(self.N_feature)]) > 0:
+        # if sum([ (self.p_automata[i].action) & (self.n_automata[i].action) for i in range(self.N_feature)]) > 0:
             # print([ (float(self.p_automata[i].state), float(self.n_automata[i].state)) for i in range(self.N_feature)])
             # raise Exception("Error: Both X and Not X are included")
 
@@ -97,17 +97,17 @@ class Clause:
                 for i in range(self.N_feature):
                     # TODO
                     # My implementation: Easier to overfit
-                    # if (self.p_automata[i].action() == 0) and (X[i] == 0): 
+                    # if (self.p_automata[i].action == 0) and (X[i] == 0): 
                     #         self.p_automata[i].reward()
                     #         self.n_automata[i].reward()
-                    # elif (self.n_automata[i].action() == 0) and (X[i] == 1):
+                    # elif (self.n_automata[i].action == 0) and (X[i] == 1):
                     #         self.p_automata[i].reward()
                     #         self.n_automata[i].reward()
 
                     # Original paper implementation
-                    if (X[i] == 0) and (self.p_automata[i].action() == 0): 
+                    if (X[i] == 0) and (self.p_automata[i].action == 0): 
                         self.p_automata[i].reward()
-                    elif (X[i] == 1) and (self.n_automata[i].action() == 0):
+                    elif (X[i] == 1) and (self.n_automata[i].action == 0):
                         self.n_automata[i].reward()
     
     def set_state(self, states):
@@ -115,7 +115,9 @@ class Clause:
 
         for i in range(self.N_feature):
             self.p_automata[i].state = states[i]
+            self.p_automata[i].update()
             self.n_automata[i].state = states[i + self.N_feature]
+            self.n_automata[i].update()
 
     def get_state(self):
         p_states = [a.state for a in self.p_automata]
