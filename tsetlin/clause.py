@@ -19,16 +19,37 @@ class Clause:
             self.p_automata[i].state = N_state // 2 + choice
             self.n_automata[i].state = N_state // 2 + (1 - choice)
 
+        self.frozen = False
+
+    def freeze(self):
+        self.frozen = True
+        self.p_actions = [p.action() for p in self.p_automata]
+        self.n_actions = [n.action() for n in self.n_automata]
+
+    def unfreeze(self):
+        self.p_actions = []
+        self.n_actions = []
+        self.frozen = False
+
     def evaluate(self, X):
-        for i in range(self.N_feature):
-            # Include positive literal, but feature is 0
-            if X[i] == 0 and self.p_automata[i].action() == 1:
-                return 0
-            # TODO: This may be redundant
-            # Include negative literal, but feature is 1
-            if  X[i] == 1 and self.n_automata[i].action() == 1:
-                return 0
-        return 1
+        if self.frozen:
+            for i in range(self.N_feature):
+                # Include positive literal, but feature is 0
+                if X[i] == 0 and self.p_actions[i] == 1:
+                    return 0
+                if  X[i] == 1 and self.n_actions[i] == 1:
+                    return 0
+            return 1
+        else:
+            for i in range(self.N_feature):
+                # Include positive literal, but feature is 0
+                if X[i] == 0 and self.p_automata[i].action() == 1:
+                    return 0
+                # TODO: This may be redundant
+                # Include negative literal, but feature is 1
+                if  X[i] == 1 and self.n_automata[i].action() == 1:
+                    return 0
+            return 1
 
     def update(self, X, match_target, clause_output, s):
         # TODO: Sanity Check: Both X and NOT X should not be included

@@ -24,6 +24,24 @@ class Tsetlin:
             self.pos_clauses.append([Clause(N_feature, N_state=N_state) for _ in range(int(N_clause / 2))])
             self.neg_clauses.append([Clause(N_feature, N_state=N_state) for _ in range(int(N_clause / 2))])
 
+        self.frozen = False
+
+    def freeze(self):
+        self.frozen = True
+        for c in range(self.n_classes):
+            for clause in self.pos_clauses[c]:
+                clause.freeze()
+            for clause in self.neg_clauses[c]:
+                clause.freeze()
+
+    def unfreeze(self):
+        self.frozen = False
+        for c in range(self.n_classes):
+            for clause in self.pos_clauses[c]:
+                clause.unfreeze()
+            for clause in self.neg_clauses[c]:
+                clause.unfreeze()
+
     def predict(self, X, return_votes=False):
         y_pred = []
         votes_list = []
