@@ -130,9 +130,7 @@ else:
         for i in m_tqdm(range(len(X_train))):
             tsetlin.step(X_train[i], y_train[i], T=T, s=s)
 
-        tsetlin.freeze()
         y_pred = tsetlin.predict(X_train)
-        tsetlin.unfreeze()
 
         accuracy = sum(y_pred == y_train) / len(y_train)
 

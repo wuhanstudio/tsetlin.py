@@ -21,16 +21,6 @@ class Clause:
 
         self.frozen = False
 
-    def freeze(self):
-        self.frozen = True
-        self.p_actions = [p.action for p in self.p_automata]
-        self.n_actions = [n.action for n in self.n_automata]
-
-    def unfreeze(self):
-        self.p_actions = []
-        self.n_actions = []
-        self.frozen = False
-
     def evaluate(self, X):
         if self.frozen:
             for i in range(self.N_feature):
