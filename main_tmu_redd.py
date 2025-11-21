@@ -10,17 +10,34 @@ from tmu.tools import BenchmarkTimer
 
 from tsetlin.utils.booleanize import booleanize_features
 
-building_1 = pd.read_csv("model/building_1_main_transients_train.csv")
+N_BIT = 8  # Number of bits for booleanization
+N_EPOCHS = 10  # Number of training epochs
 
-X = building_1[["transition", "duration"]]
-X_mean =  X.mean().to_numpy().tolist()
-X_std = X.std().to_numpy().tolist()
-X = booleanize_features(X.to_numpy(), X_mean, X_std, num_bits=8)
+TRAIN_BUILDING = [1, 2, 3]
+TEST_BUIULDING = [5]
 
-# y = building_1["microwave_label"]
-y = building_1["fridge_label"]
+train_files = [f"building_{building}_main_transients_train.csv" for building in TRAIN_BUILDING]
+test_files = [f"building_{building}_main_transients_train.csv" for building in TEST_BUIULDING]
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Read and concatenate
+train_df = pd.concat((pd.read_csv(f"model/{f}") for f in train_files), ignore_index=True)
+test_df = pd.concat((pd.read_csv(f"model/{f}") for f in test_files), ignore_index=True)
+
+X_train = train_df[["transition", "duration"]]
+X_test = test_df[["transition", "duration"]]
+
+y_train = train_df["fridge_label"]
+y_test = test_df["fridge_label"]
+
+y_train = y_train.to_numpy()
+y_test = y_test.to_numpy()
+
+# Normalization
+X_mean = pd.concat([X_train, X_test]).mean().to_list()
+X_std = pd.concat([X_train, X_test]).std().to_list()
+
+X_train = booleanize_features(X_train.to_numpy(), X_mean, X_std, num_bits=N_BIT)
+X_test = booleanize_features(X_test.to_numpy(), X_mean, X_std, num_bits=N_BIT)
 
 data = {}
 data['x_train'] = np.array(X_train)
