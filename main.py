@@ -107,10 +107,7 @@ if __name__ == "__main__":
             for i in m_tqdm(range(len(X_train))):
                 tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s)
 
-            tsetlin.freeze()
             y_pred = tsetlin.predict(X_train)
-            tsetlin.unfreeze()
-
             accuracy = sum([ 1 if pred == train else 0 for pred, train in zip(y_pred, y_train)]) / len(y_train)
 
         # tsetlin.fit(X_train, y_train, T=15, s=3, epochs=EPOCHS)

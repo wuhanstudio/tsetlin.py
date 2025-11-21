@@ -24,7 +24,11 @@ class Tsetlin:
             self.pos_clauses.append([Clause(N_feature, N_state=N_state) for _ in range(int(N_clause / 2))])
             self.neg_clauses.append([Clause(N_feature, N_state=N_state) for _ in range(int(N_clause / 2))])
 
-        self.frozen = False
+    def compress(self):
+        for c in range(self.n_classes):
+            for j in range(int(self.n_clauses / 2)):
+                self.pos_clauses[c][j].compress()
+                self.neg_clauses[c][j].compress()
 
     def predict(self, X, return_votes=False, n_jobs=8):
         y_pred = []
@@ -136,6 +140,7 @@ class Tsetlin:
             tm_model.pos_clauses.append(pos_clauses)
             tm_model.neg_clauses.append(neg_clauses)
 
+        tm_model.compress()
         return tm_model
 
     @staticmethod
@@ -179,6 +184,7 @@ class Tsetlin:
             tm_model.pos_clauses.append(pos_clauses)
             tm_model.neg_clauses.append(neg_clauses)
 
+        tm_model.compress()
         return tm_model
 
     def save_model(self, path, type="training"):

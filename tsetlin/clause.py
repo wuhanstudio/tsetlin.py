@@ -19,27 +19,39 @@ class Clause:
             self.p_automata[i].state = N_state // 2 + choice
             self.n_automata[i].state = N_state // 2 + (1 - choice)
 
-        self.frozen = False
+        self.compress()
+
+    def compress(self):
+        self.p_actions = [a.action for a in self.p_automata]
+        self.n_actions = [a.action for a in self.n_automata]
+
+        # Get the index of included literals
+        self.p_included_literals = []
+        self.n_included_literals = []
+        for i in range(self.N_feature):
+            if self.p_actions[i] == 1:
+                self.p_included_literals.append(i)
+            if self.n_actions[i] == 1:
+                self.n_included_literals.append(i)
 
     def evaluate(self, X):
-        if self.frozen:
-            for i in range(self.N_feature):
-                # Include positive literal, but feature is 0
-                if X[i] == 0 and self.p_actions[i] == 1:
-                    return 0
-                if  X[i] == 1 and self.n_actions[i] == 1:
-                    return 0
-            return 1
-        else:
-            for i in range(self.N_feature):
-                # Include positive literal, but feature is 0
-                if X[i] == 0 and self.p_automata[i].action == 1:
-                    return 0
-                # TODO: This may be redundant
-                # Include negative literal, but feature is 1
-                if  X[i] == 1 and self.n_automata[i].action == 1:
-                    return 0
-            return 1
+        for i in self.p_included_literals:
+            if X[i] == 0:
+                return 0
+        for i in self.n_included_literals:
+            if X[i] == 1:
+                return 0
+        return 1
+
+        # for i in range(self.N_feature):
+        #     # Include positive literal, but feature is 0
+        #     if X[i] == 0 and self.p_automata[i].action == 1:
+        #         return 0
+        #     # TODO: This may be redundant
+        #     # Include negative literal, but feature is 1
+        #     if  X[i] == 1 and self.n_automata[i].action == 1:
+        #         return 0
+        # return 1
 
     def update(self, X, match_target, clause_output, s):
         # TODO: Sanity Check: Both X and NOT X should not be included
@@ -99,7 +111,9 @@ class Clause:
                         self.p_automata[i].reward()
                     elif (X[i] == 1) and (self.n_automata[i].action == 0):
                         self.n_automata[i].reward()
-    
+
+        self.compress()
+
     def set_state(self, states):
         assert len(states) == 2 * self.N_feature, "States must be a 1D array with shape (2 * N_features)"
 
