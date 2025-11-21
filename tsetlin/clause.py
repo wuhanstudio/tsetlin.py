@@ -1,4 +1,5 @@
 import random
+
 from tsetlin.automaton import Automaton
 
 class Clause:
@@ -70,9 +71,11 @@ class Clause:
             if clause_output == 0:
                 for i in range(self.N_feature):
                     if random.random() <= s1:
-                        self.p_automata[i].penalty()
+                        if self.p_automata[i].penalty() and i in self.p_included_literals:
+                            self.p_included_literals.remove(i)
                     if random.random() <= s1:
-                        self.n_automata[i].penalty()
+                        if self.n_automata[i].penalty() and i in self.n_included_literals:
+                            self.n_included_literals.remove(i)
 
             # Recognize Pattern
             # Increase the number of included literals
@@ -81,16 +84,20 @@ class Clause:
                     # Positive literal X
                     if X[i] == 1:
                         if random.random() <= s2:
-                            self.p_automata[i].reward()
+                            if self.p_automata[i].reward():
+                                self.p_included_literals.append(i)
                         if random.random() <= s1:
-                            self.n_automata[i].penalty()
+                            if self.n_automata[i].penalty() and i in self.n_included_literals:
+                                self.n_included_literals.remove(i)
 
                     # Negative literal NOT X
                     elif X[i] == 0:
                         if random.random() <= s2:
-                            self.n_automata[i].reward()
+                            if self.n_automata[i].reward():
+                                self.n_included_literals.append(i)
                         if random.random() <= s1:
-                            self.p_automata[i].penalty()
+                            if self.p_automata[i].penalty() and i in self.p_included_literals:
+                                self.p_included_literals.remove(i)
 
         # Type II Feedback (Reject Patterns)
         else:
@@ -108,11 +115,11 @@ class Clause:
 
                     # Original paper implementation
                     if (X[i] == 0) and (self.p_automata[i].action == 0): 
-                        self.p_automata[i].reward()
+                        if self.p_automata[i].reward():
+                            self.p_included_literals.append(i)
                     elif (X[i] == 1) and (self.n_automata[i].action == 0):
-                        self.n_automata[i].reward()
-
-        self.compress()
+                        if self.n_automata[i].reward():
+                            self.n_included_literals.append(i)
 
     def set_state(self, states):
         assert len(states) == 2 * self.N_feature, "States must be a 1D array with shape (2 * N_features)"

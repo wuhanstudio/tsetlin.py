@@ -11,13 +11,18 @@ class Automaton:
         return 1 if (self.state > (self.N_state // 2)) else 0
 
     def reward(self):
+        previous_action = self.action
         if self.state < self.N_state:
             self.state += 1
             self.action = self._action()
+        return previous_action != self.action
+
     def penalty(self):
+        previous_action = self.action
         if self.state > 1:
             self.state -= 1
             self.action = self._action()
-    
+        return previous_action != self.action
+
     def update(self):
         self.action = self._action()
