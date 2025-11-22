@@ -41,6 +41,7 @@ class Clause:
                 return 0
         return 1
 
+        # Evaluate without compression (slower)
         # for i in range(self.N_feature):
         #     # Include positive literal, but feature is 0
         #     if X[i] == 0 and self.p_automata[i].action == 1:
