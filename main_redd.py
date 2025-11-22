@@ -1,3 +1,6 @@
+import random
+random.seed(0)
+
 import numpy as np
 import pandas as pd
 from loguru import logger

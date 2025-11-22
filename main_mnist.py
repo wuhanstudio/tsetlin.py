@@ -1,3 +1,6 @@
+import random
+random.seed(0)
+
 import argparse
 
 import mnist
