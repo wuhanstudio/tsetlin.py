@@ -15,8 +15,6 @@ from tsetlin.utils.log import log
 
 from tsetlin.utils.split import train_test_split
 
-from pyinstrument import Profiler
-
 # Example usage
 X, y = load_iris_X_y('iris.csv')
 
@@ -57,6 +55,8 @@ if __name__ == "__main__":
     parser.add_argument("--s", type=float, default=6.0, help="Specificity s")
 
     parser.add_argument("--optuna", action='store_true')
+    parser.add_argument("--profile", action='store_true')
+
     args = parser.parse_args()
 
     N_EPOCHS = args.epochs
@@ -99,8 +99,10 @@ if __name__ == "__main__":
         y_pred = tsetlin.predict(X_test)
         accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(y_pred, y_test)]) / len(y_test)
 
-        profiler = Profiler()
-        profiler.start()
+        if args.profile:
+            from pyinstrument import Profiler
+            profiler = Profiler()
+            profiler.start()
 
         for epoch in range(N_EPOCHS):
             log(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
@@ -112,8 +114,9 @@ if __name__ == "__main__":
 
         # tsetlin.fit(X_train, y_train, T=15, s=3, epochs=EPOCHS)
 
-        profiler.stop()
-        profiler.print()
+        if args.profile:
+            profiler.stop()
+            profiler.print()
 
         log("")
 
