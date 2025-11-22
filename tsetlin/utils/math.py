@@ -21,7 +21,7 @@ def clip(x, a_min, a_max):
     return max(a_min, min(x, a_max))
 
 def argmax(x):
-    return max(enumerate(x), key=lambda x:x[1])[0]
+    return max(range(len(x)), key=x.__getitem__)
 
 def to_int32(val):
     val = int(val)
