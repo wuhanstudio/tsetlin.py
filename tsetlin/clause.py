@@ -8,12 +8,13 @@ class Clause:
         assert N_state % 2 == 0, "N_state must be even"
 
         self.N_feature = N_feature
+        self.N_states = N_state
         self.N_literals = 2 * N_feature
 
         # Positive and Negative Automata for each feature
         self.p_automata = [Automaton(N_state, -1) for _ in range(N_feature)]
         self.n_automata = [Automaton(N_state, -1) for _ in range(N_feature)]
-        
+
         # Randomly initialize automata states middle_state + {0,1}
         for i in range(self.N_feature):
             choice = random.choice([0, 1])
@@ -68,10 +69,10 @@ class Clause:
             # Reduce the number of included literals
             if clause_output == 0:
                 for i in range(self.N_feature):
-                    if random.random() <= s1:
+                    if self.p_automata[i].state > 1 and random.random() <= s1:
                         if self.p_automata[i].penalty() and i in self.p_included_literals:
                             self.p_included_literals.remove(i)
-                    if random.random() <= s1:
+                    if self.n_automata[i].state > 1 and random.random() <= s1:
                         if self.n_automata[i].penalty() and i in self.n_included_literals:
                             self.n_included_literals.remove(i)
 
@@ -81,19 +82,21 @@ class Clause:
                 for i in range(self.N_feature):
                     # Positive literal X
                     if X[i] == 1:
-                        if random.random() <= s2:
+                        if self.p_automata[i].state < self.N_states and random.random() <= s2:
                             if self.p_automata[i].reward():
                                 self.p_included_literals.append(i)
-                        if random.random() <= s1:
+
+                        if self.n_automata[i].state > 1 and random.random() <= s1:
                             if self.n_automata[i].penalty() and i in self.n_included_literals:
                                 self.n_included_literals.remove(i)
 
                     # Negative literal NOT X
                     elif X[i] == 0:
-                        if random.random() <= s2:
+                        if self.n_automata[i].state < self.N_states and random.random() <= s2:
                             if self.n_automata[i].reward():
                                 self.n_included_literals.append(i)
-                        if random.random() <= s1:
+
+                        if self.p_automata[i].state > 1 and random.random() <= s1:
                             if self.p_automata[i].penalty() and i in self.p_included_literals:
                                 self.p_included_literals.remove(i)
 

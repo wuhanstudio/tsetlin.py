@@ -13,18 +13,16 @@ class Automaton:
 
     def reward(self):
         previous_action = self.action
-        if self.state < self.N_state:
-            self.state += 1
-            self.action = self._action()
+        self.state += 1
+        self.action = self._action()
 
         # A new include literal
         return previous_action != self.action
 
     def penalty(self):
         previous_action = self.action
-        if self.state > 1:
-            self.state -= 1
-            self.action = self._action()
+        self.state -= 1
+        self.action = self._action()
 
         # A new exclude literal
         return previous_action != self.action

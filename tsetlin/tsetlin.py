@@ -24,7 +24,7 @@ class Tsetlin:
             self.neg_clauses.append([Clause(N_feature, N_state=N_state) for _ in range(int(N_clause / 2))])
 
     def predict(self, X, return_votes=False, n_jobs=8):
-        y_pred = []
+        y_pred = [0] * len(X)
         votes_list = []
         for i in m_tqdm(range(len(X)), desc="Evaluating"):
             votes = [0] * self.n_classes
@@ -32,8 +32,12 @@ class Tsetlin:
                 for j in range(int(self.n_clauses / 2)):
                     votes[c] += self.pos_clauses[c][j].evaluate(X[i])
                     votes[c] -= self.neg_clauses[c][j].evaluate(X[i])
-            y_pred.append(argmax(votes))
-            votes_list.append(votes)
+
+            y_pred[i] = argmax(votes)
+
+            if return_votes:
+                votes_list.append(votes)
+
         if return_votes:
             return y_pred, votes_list
         else:
