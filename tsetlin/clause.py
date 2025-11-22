@@ -23,16 +23,13 @@ class Clause:
         self.compress()
 
     def compress(self):
-        self.p_actions = [a.action for a in self.p_automata]
-        self.n_actions = [a.action for a in self.n_automata]
-
         # Get the index of included literals
         self.p_included_literals = []
         self.n_included_literals = []
         for i in range(self.N_feature):
-            if self.p_actions[i] == 1:
+            if self.p_automata[i].action == 1:
                 self.p_included_literals.append(i)
-            if self.n_actions[i] == 1:
+            if self.n_automata[i].action == 1:
                 self.n_included_literals.append(i)
 
     def evaluate(self, X):
@@ -129,6 +126,8 @@ class Clause:
             self.p_automata[i].update()
             self.n_automata[i].state = states[i + self.N_feature]
             self.n_automata[i].update()
+
+        self.compress()
 
     def get_state(self):
         p_states = [a.state for a in self.p_automata]
