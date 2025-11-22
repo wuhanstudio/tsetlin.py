@@ -1,33 +1,25 @@
 import argparse
 
 import mnist
-import numpy as np
-
 from tsetlin import Tsetlin
-from tsetlin.utils import booleanize_features
 
 from tsetlin.utils.log import log
 from tsetlin.utils.tqdm import m_tqdm
+from tsetlin.utils.dataset import balance_dataset
 
 mnist.datasets_url = "https://ossci-datasets.s3.amazonaws.com/mnist/"
 
 X_train = mnist.train_images()
 y_train = mnist.train_labels()
 
+X_train[X_train <= 75] = 0
+X_train[X_train > 75] = 1
+
 X_test = mnist.test_images()
 y_test = mnist.test_labels()
 
-def balance_dataset(X_train, y_train, num_per_class=1000):
-    indices = []
-
-    for cls in np.unique(y_train):
-        cls_idx = np.where(y_train == cls)[0]
-        chosen = np.random.choice(cls_idx, num_per_class, replace=False)
-        indices.extend(chosen)
-
-    indices = np.array(indices)
-    np.random.shuffle(indices)
-    return indices
+X_test[X_test <= 75] = 0
+X_test[X_test > 75] = 1
 
 indices = balance_dataset(X_train, y_train, num_per_class=100)
 X_train = X_train[indices]
@@ -46,7 +38,6 @@ if __name__ == "__main__":
 
     parser.add_argument("--n_clause", type=int, default=100, help="Number of clauses")
     parser.add_argument("--n_state", type=int, default=400, help="Number of states")
-    parser.add_argument("--n_bit", type=int, default=8, help="Number of bits in [1, 2, 4, 8]")
     
     parser.add_argument("--T", type=int, default=30, help="Threshold T")
     parser.add_argument("--s", type=float, default=6.0, help="Specificity s")
@@ -57,21 +48,16 @@ if __name__ == "__main__":
     N_CLAUSE = args.n_clause
     N_STATE  = args.n_state
 
-    N_BIT = args.n_bit
-    if N_BIT not in {1, 2, 4, 8}:
-        raise ValueError("n_bit must be one of [1, 2, 4, 8]")
-
-    log(f"Using {N_BIT} bits for booleanization")
     log(f"Number of clauses: {N_CLAUSE}, Number of states: {N_STATE}")
     log(f"Threshold T: {args.T}, Specificity s: {args.s}")
 
     # Flatten images
-    X_train = X_train.reshape((X_train.shape[0], -1)).astype(float) / 255.0
-    X_test = X_test.reshape((X_test.shape[0], -1)).astype(float) / 255.0
+    X_train = X_train.reshape((X_train.shape[0], -1))
+    X_test = X_test.reshape((X_test.shape[0], -1))
 
     # Normalization (not really needed for MNIST)
-    X_train = booleanize_features(X_train, 0, 1.0, num_bits=N_BIT)
-    X_test = booleanize_features(X_test, 0, 1.0, num_bits=N_BIT)
+    # X_train = booleanize_features(X_train, 0, 1.0, num_bits=N_BIT)
+    # X_test = booleanize_features(X_test, 0, 1.0, num_bits=N_BIT)
 
     tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=10, N_clause=N_CLAUSE, N_state=N_STATE)
 
