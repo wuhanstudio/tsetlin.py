@@ -9,25 +9,25 @@ class Automaton:
         self.action = self._action()
 
     def _action(self):
-        return 1 if (self.state > self.middle_state) else 0
+        return 1 if (self.state > (self.middle_state)) else 0
 
     def reward(self):
-        changed = False
+        previous_action = self.action
         if self.state < self.N_state:
-            changed = (self.state == self.middle_state)
             self.state += 1
-            if changed:
-                self.action ^= 1
-        return changed
+            self.action = self._action()
+
+        # A new include literal
+        return previous_action != self.action
 
     def penalty(self):
-        changed = False
+        previous_action = self.action
         if self.state > 1:
-            changed = (self.state == (self.middle_state + 1))
             self.state -= 1
-            if changed:
-                self.action ^= 1
-        return changed
+            self.action = self._action()
+
+        # A new exclude literal
+        return previous_action != self.action
 
     def update(self):
         self.action = self._action()
