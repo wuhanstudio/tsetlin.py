@@ -195,9 +195,9 @@ class Tsetlin:
             raise ValueError("type must be either 'training' or 'inference'")
         
         if type == "training":
-            tm.model_type = tsetlin_pb2.Tsetlin.ModelType.TRAINING
+            tm.model_type = tsetlin_pb2.ModelType.TRAINING
         else:
-            tm.model_type = tsetlin_pb2.Tsetlin.ModelType.INFERENCE
+            tm.model_type = tsetlin_pb2.ModelType.INFERENCE
 
         for i in range(self.n_classes):
             for j in range(self.n_clauses // 2):
