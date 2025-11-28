@@ -43,8 +43,9 @@ class Tsetlin:
         else:
             return y_pred
 
-    def step(self, X, y_target, T, s):
+    def step(self, X, y_target, T, s, return_feedback=False):
         # Pair-wise learning
+        feedback = {'target': {'type-1': 0, 'type-2': 0}, 'non-target': {'type-1': 0, 'type-2': 0}}
 
         # Pair 1: Target class
         class_sum = 0
@@ -66,10 +67,14 @@ class Tsetlin:
         for i in range(int(self.n_clauses / 2)):
             if (random.random() <= c1):
                 # Positive Clause: Type I Feedback
-                self.pos_clauses[y_target][i].update(X, 1, pos_clauses[i], s=s)
+                feedback_count = self.pos_clauses[y_target][i].update(X, 1, pos_clauses[i], s=s)
+                if return_feedback:
+                    feedback['target']['type-1'] += feedback_count
             if (random.random() <= c1):
                 # Negative Clause: Type II Feedback
-                self.neg_clauses[y_target][i].update(X, 0, neg_clauses[i], s=s)
+                feedback_count = self.neg_clauses[y_target][i].update(X, 0, neg_clauses[i], s=s)
+                if return_feedback:
+                    feedback['target']['type-2'] += feedback_count
 
         # Pair 2: Non-target classes
         other_class = random.choice([x for x in range(self.n_classes) if x != y_target])
@@ -91,10 +96,17 @@ class Tsetlin:
         for i in range(int(self.n_clauses / 2)):
             if (random.random() <= c2):
                 # Positive Clause: Type II Feedback
-                self.pos_clauses[other_class][i].update(X, 0, pos_clauses[i], s=s)
+                feedback_count = self.pos_clauses[other_class][i].update(X, 0, pos_clauses[i], s=s)
+                if return_feedback:
+                    feedback['non-target']['type-2'] += feedback_count
             if (random.random() <= c2):
                 # Negative Clause: Type I Feedback
-                self.neg_clauses[other_class][i].update(X, 1, neg_clauses[i], s=s)
+                feedback_count = self.neg_clauses[other_class][i].update(X, 1, neg_clauses[i], s=s)
+                if return_feedback:
+                    feedback['non-target']['type-1'] += feedback_count
+
+        if return_feedback:
+            return feedback
 
     def fit(self, X, y, T, s, epochs):
         for epoch in m_tqdm(range(epochs), desc="Training Epochs"):

@@ -59,6 +59,8 @@ class Clause:
             # print([ (float(self.p_automata[i].state), float(self.n_automata[i].state)) for i in range(self.N_feature)])
             # raise Exception("Error: Both X and Not X are included")
 
+        feedback_count = 0
+
         # Type I Feedback (Support patterns)
         if match_target == 1:
             # Want clause_output to be 1
@@ -70,9 +72,11 @@ class Clause:
             if clause_output == 0:
                 for i in range(self.N_feature):
                     if self.p_automata[i].state > 1 and random.random() <= s1:
+                        feedback_count += 1
                         if self.p_automata[i].penalty() and i in self.p_included_literals:
                             self.p_included_literals.remove(i)
                     if self.n_automata[i].state > 1 and random.random() <= s1:
+                        feedback_count += 1
                         if self.n_automata[i].penalty() and i in self.n_included_literals:
                             self.n_included_literals.remove(i)
 
@@ -83,20 +87,24 @@ class Clause:
                     # Positive literal X
                     if X[i] == 1:
                         if self.p_automata[i].state < self.N_states and random.random() <= s2:
+                            feedback_count += 1
                             if self.p_automata[i].reward():
                                 self.p_included_literals.append(i)
 
                         if self.n_automata[i].state > 1 and random.random() <= s1:
+                            feedback_count += 1
                             if self.n_automata[i].penalty() and i in self.n_included_literals:
                                 self.n_included_literals.remove(i)
 
                     # Negative literal NOT X
                     elif X[i] == 0:
                         if self.n_automata[i].state < self.N_states and random.random() <= s2:
+                            feedback_count += 1
                             if self.n_automata[i].reward():
                                 self.n_included_literals.append(i)
 
                         if self.p_automata[i].state > 1 and random.random() <= s1:
+                            feedback_count += 1
                             if self.p_automata[i].penalty() and i in self.p_included_literals:
                                 self.p_included_literals.remove(i)
 
@@ -116,11 +124,15 @@ class Clause:
 
                     # Original paper implementation
                     if (X[i] == 0) and (self.p_automata[i].action == 0): 
+                        feedback_count += 1
                         if self.p_automata[i].reward():
                             self.p_included_literals.append(i)
                     elif (X[i] == 1) and (self.n_automata[i].action == 0):
+                        feedback_count += 1
                         if self.n_automata[i].reward():
                             self.n_included_literals.append(i)
+
+        return feedback_count
 
     def set_state(self, states):
         assert len(states) == 2 * self.N_feature, "States must be a 1D array with shape (2 * N_features)"

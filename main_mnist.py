@@ -45,6 +45,8 @@ if __name__ == "__main__":
     parser.add_argument("--T", type=int, default=100, help="Threshold T")
     parser.add_argument("--s", type=float, default=5.0, help="Specificity s")
 
+    parser.add_argument("--feedback", action='store_true')
+
     args = parser.parse_args()
 
     N_EPOCHS = args.epochs
@@ -69,9 +71,20 @@ if __name__ == "__main__":
 
     for epoch in range(N_EPOCHS):
         log(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
+        target_type_1_count = 0
+        target_type_2_count = 0
+        non_target_type_1_count = 0
+        non_target_type_2_count = 0
         for i in m_tqdm(range(len(X_train))):
-            tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s)
-
+            feedback = tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s, return_feedback=args.feedback)
+            if args.feedback:
+                target_type_1_count += feedback['target']['type-1']
+                target_type_2_count += feedback['target']['type-2']
+                non_target_type_1_count += feedback['non-target']['type-1']
+                non_target_type_2_count += feedback['non-target']['type-2']
+        if args.feedback:
+            log(f"Target Type I Feedbacks: {target_type_1_count}, Target Type II Feedbacks: {target_type_2_count}")
+            log(f"Non-Target Type I Feedbacks: {non_target_type_1_count}, Non-Target Type II Feedbacks: {non_target_type_2_count}")
         y_pred = tsetlin.predict(X_train)
         accuracy = sum(y_pred == y_train) / len(y_train)
 
