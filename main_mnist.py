@@ -35,6 +35,29 @@ X_test[X_test > 75] = 1
 log(f"Train images shape: {X_train.shape}, Train labels shape: {y_train.shape}")
 log(f"Test images shape: {X_test.shape}, Test labels shape: {y_test.shape}")
 
+def plot_histogram(tsetlin):
+    cube = []
+    for i in range(tsetlin.n_classes):
+        matrix = []
+        for j in range(tsetlin.n_clauses // 2):
+            row = []
+            p_clause = tsetlin.pos_clauses[i][j]
+            n_clause = tsetlin.neg_clauses[i][j]
+            for k in range(tsetlin.n_features):
+                p_auto = p_clause.p_automata[k].state
+                n_auto = n_clause.p_automata[k].state
+                row.append(p_auto)
+                row.append(n_auto)
+            matrix.append(row)
+        cube.append(matrix)
+
+    import numpy as np
+    import matplotlib.pyplot as plt
+    cube = np.array(cube).flatten()
+    plt.hist(cube, bins=20, edgecolor='black')
+    plt.xlim(0, tsetlin.n_states)
+    plt.show()
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tsetlin Machine on Iris Dataset")
     parser.add_argument("--epochs", type=int, default=5, help="Number of training epochs")
@@ -69,6 +92,13 @@ if __name__ == "__main__":
     y_pred = tsetlin.predict(X_test)
     accuracy = sum(y_pred == y_test) / len(y_test)
 
+    # plot_histogram(tsetlin)
+    
+    target_type_1_count_list = []
+    target_type_2_count_list = []
+    non_target_type_1_count_list = []
+    non_target_type_2_count_list = []
+
     for epoch in range(N_EPOCHS):
         log(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
         target_type_1_count = 0
@@ -88,6 +118,25 @@ if __name__ == "__main__":
         y_pred = tsetlin.predict(X_train)
         accuracy = sum(y_pred == y_train) / len(y_train)
 
+        # plot_histogram(tsetlin)
+        if args.feedback:
+            target_type_1_count_list.append(target_type_1_count)
+            target_type_2_count_list.append(target_type_2_count)
+            non_target_type_1_count_list.append(non_target_type_1_count)
+            non_target_type_2_count_list.append(non_target_type_2_count)
+    
+    if args.feedback:
+        import matplotlib.pyplot as plt
+        epochs = list(range(1, N_EPOCHS + 1))
+        plt.plot(epochs, target_type_1_count_list, label='Target Type I')
+        plt.plot(epochs, target_type_2_count_list, label='Target Type II')
+        plt.plot(epochs, non_target_type_1_count_list, label='Non-Target Type I')
+        plt.plot(epochs, non_target_type_2_count_list, label='Non-Target Type II')
+        plt.xlabel('Epoch')
+        plt.ylabel('Feedback Count')
+        plt.title('Feedback Counts per Epoch')
+        plt.legend()
+        plt.show()
     # tsetlin.fit(X_train, y_train, T=15, s=3, epochs=EPOCHS)
 
     log("")
