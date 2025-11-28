@@ -24,26 +24,26 @@ y_test = mnist.test_labels()
 X_test[X_test <= 75] = 0
 X_test[X_test > 75] = 1
 
-indices = balance_dataset(X_train, y_train, num_per_class=100)
-X_train = X_train[indices]
-y_train = y_train[indices]
+# indices = balance_dataset(X_train, y_train, num_per_class=100)
+# X_train = X_train[indices]
+# y_train = y_train[indices]
 
-indices = balance_dataset(X_test, y_test, num_per_class=20)
-X_test = X_test[indices]
-y_test = y_test[indices]
+# indices = balance_dataset(X_test, y_test, num_per_class=20)
+# X_test = X_test[indices]
+# y_test = y_test[indices]
 
 log(f"Train images shape: {X_train.shape}, Train labels shape: {y_train.shape}")
 log(f"Test images shape: {X_test.shape}, Test labels shape: {y_test.shape}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tsetlin Machine on Iris Dataset")
-    parser.add_argument("--epochs", type=int, default=10, help="Number of training epochs")
+    parser.add_argument("--epochs", type=int, default=5, help="Number of training epochs")
 
-    parser.add_argument("--n_clause", type=int, default=100, help="Number of clauses")
-    parser.add_argument("--n_state", type=int, default=400, help="Number of states")
+    parser.add_argument("--n_clause", type=int, default=200, help="Number of clauses")
+    parser.add_argument("--n_state", type=int, default=100, help="Number of states")
     
-    parser.add_argument("--T", type=int, default=30, help="Threshold T")
-    parser.add_argument("--s", type=float, default=6.0, help="Specificity s")
+    parser.add_argument("--T", type=int, default=100, help="Threshold T")
+    parser.add_argument("--s", type=float, default=5.0, help="Specificity s")
 
     args = parser.parse_args()
 
