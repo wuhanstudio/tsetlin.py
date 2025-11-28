@@ -96,13 +96,13 @@ Threshold T: 30, Specificity s: 6.0
 <!-- TOC --><a name="prerequisites"></a>
 ### Prerequisites
 
-Using `pip`:
+Choice 1: Using `pip`:
 
 ```
 $ python -m pip install -r requirements.txt
 ```
 
-Using `pipenv`:
+Choice 2: Using `pipenv`:
 
 ```
 $ python -m pip install pipenv
@@ -111,7 +111,7 @@ $ pipenv install
 $ pipenv shell
 ```
 
-Using `uv`
+Choice 3: Using `uv`
 
 ```
 $ uv python install 3.12
