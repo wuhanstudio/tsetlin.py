@@ -2,7 +2,7 @@
 
 Prerequisites:
 
-``
+```
 $ sudo apt install protobuf-compiler
 
 $ git submodule init
