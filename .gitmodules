@@ -1,3 +1,6 @@
 [submodule "model/redd"]
 	path = model/redd
 	url = https://github.com/wuhanstudio/redd
+[submodule "protobuf/uprotobuf"]
+	path = protobuf/uprotobuf
+	url = https://github.com/wuhanstudio/uprotobuf

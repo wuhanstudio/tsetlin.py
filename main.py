@@ -125,17 +125,33 @@ if __name__ == "__main__":
         accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(y_pred, y_test)]) / len(y_test)
 
         log(f"Test Accuracy: {accuracy * 100:.2f}%")
+        
+        # Save the model
+        tsetlin.save_umodel("tsetlin_model.upb", type="training")
+        log("[Micropython] Model saved to tsetlin_model.upb")
+
+        log("")
+
+        # Load the model
+        n_tsetlin = Tsetlin.load_umodel("tsetlin_model.upb")
+        log("[Micropython] Model loaded from tsetlin_model.upb")
+
+        # Evaluate the loaded model
+        n_y_pred = n_tsetlin.predict(X_test)
+        accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(n_y_pred, y_test)]) / len(y_test)
+
+        log(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
 
         if sys.implementation.name != "micropython":
             # Save the model
             tsetlin.save_model("tsetlin_model.pb", type="training")
-            log("Model saved to tsetlin_model.pb")
+            log("[Python] Model saved to tsetlin_model.pb")
 
             log("")
 
             # Load the model
             n_tsetlin = Tsetlin.load_model("tsetlin_model.pb")
-            log("Model loaded from tsetlin_model.pb")
+            log("[Python] Model loaded from tsetlin_model.pb")
 
             # Evaluate the loaded model
             n_y_pred = n_tsetlin.predict(X_test)
