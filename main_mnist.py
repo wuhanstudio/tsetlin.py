@@ -54,8 +54,27 @@ def plot_histogram(tsetlin):
     import numpy as np
     import matplotlib.pyplot as plt
     cube = np.array(cube).flatten()
-    plt.hist(cube, bins=20, edgecolor='black')
-    plt.xlim(0, tsetlin.n_states)
+
+    fig, ax = plt.subplots()
+
+    # Draw histogram
+    counts, bins, patches = ax.hist(cube, bins=20, edgecolor='black')
+
+    # Total number of samples
+    total = counts.sum()
+
+    # Add percentages above bars
+    for count, bin_left, bin_right in zip(counts, bins[:-1], bins[1:]):
+        if count == 0:
+            continue  # skip empty bins
+        x = (bin_left + bin_right) / 2  # center of bar
+        y = count
+        percent = (count / total) * 100
+        ax.text(x, y, f"{percent:.2f}%", ha='center', va='bottom', fontsize=8)
+
+    plt.xlabel("Value")
+    plt.ylabel("Frequency")
+    plt.title("Histogram with Percentages")
     plt.show()
 
 if __name__ == "__main__":
@@ -92,8 +111,8 @@ if __name__ == "__main__":
     y_pred = tsetlin.predict(X_test)
     accuracy = sum(y_pred == y_test) / len(y_test)
 
-    # plot_histogram(tsetlin)
-    
+    plot_histogram(tsetlin)
+
     target_type_1_count_list = []
     target_type_2_count_list = []
     non_target_type_1_count_list = []
@@ -118,7 +137,7 @@ if __name__ == "__main__":
         y_pred = tsetlin.predict(X_train)
         accuracy = sum(y_pred == y_train) / len(y_train)
 
-        # plot_histogram(tsetlin)
+        plot_histogram(tsetlin)
         if args.feedback:
             target_type_1_count_list.append(target_type_1_count)
             target_type_2_count_list.append(target_type_2_count)
