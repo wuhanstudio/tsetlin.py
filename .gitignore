@@ -4,5 +4,6 @@ __pycache__/
 *.upb
 *.sqlite3
 *.h5
+*.log
 temp/
 .ipynb_checkpoints/

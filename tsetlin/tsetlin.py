@@ -43,7 +43,7 @@ class Tsetlin:
         else:
             return y_pred
 
-    def step(self, X, y_target, T, s, return_feedback=False):
+    def step(self, X, y_target, T, s, return_feedback=False, threshold=-1, logger=None):
         # Pair-wise learning
         feedback = {'target': {'type-1': 0, 'type-2': 0}, 'non-target': {'type-1': 0, 'type-2': 0}}
 
@@ -67,14 +67,18 @@ class Tsetlin:
         for i in range(int(self.n_clauses / 2)):
             if (random.random() <= c1):
                 # Positive Clause: Type I Feedback
-                feedback_count = self.pos_clauses[y_target][i].update(X, 1, pos_clauses[i], s=s)
+                feedback_count = self.pos_clauses[y_target][i].update(X, 1, pos_clauses[i], s=s, threshold=threshold, logger=logger)
                 if return_feedback:
                     feedback['target']['type-1'] += feedback_count
+                if logger is not None:
+                    logger.debug(f"Clause updated for target class {y_target}, clause {i}, Type I feedback count {feedback_count}")
             if (random.random() <= c1):
                 # Negative Clause: Type II Feedback
-                feedback_count = self.neg_clauses[y_target][i].update(X, 0, neg_clauses[i], s=s)
+                feedback_count = self.neg_clauses[y_target][i].update(X, 0, neg_clauses[i], s=s, threshold=threshold, logger=logger)
                 if return_feedback:
                     feedback['target']['type-2'] += feedback_count
+                if logger is not None:
+                    logger.debug(f"Clause updated for target class {y_target}, clause {i}, Type II feedback count {feedback_count}")
 
         # Pair 2: Non-target classes
         other_class = random.choice([x for x in range(self.n_classes) if x != y_target])
@@ -96,14 +100,18 @@ class Tsetlin:
         for i in range(int(self.n_clauses / 2)):
             if (random.random() <= c2):
                 # Positive Clause: Type II Feedback
-                feedback_count = self.pos_clauses[other_class][i].update(X, 0, pos_clauses[i], s=s)
+                feedback_count = self.pos_clauses[other_class][i].update(X, 0, pos_clauses[i], s=s, threshold=threshold, logger=logger)
                 if return_feedback:
                     feedback['non-target']['type-2'] += feedback_count
+                if logger is not None:
+                    logger.debug(f"Clause updated for non-target class {other_class}, clause {i}, Type II feedback count {feedback_count}")
             if (random.random() <= c2):
                 # Negative Clause: Type I Feedback
-                feedback_count = self.neg_clauses[other_class][i].update(X, 1, neg_clauses[i], s=s)
+                feedback_count = self.neg_clauses[other_class][i].update(X, 1, neg_clauses[i], s=s, threshold=threshold, logger=logger)
                 if return_feedback:
                     feedback['non-target']['type-1'] += feedback_count
+                if logger is not None:
+                    logger.debug(f"Clause updated for non-target class {other_class}, clause {i}, Type I feedback count {feedback_count}")
 
         if return_feedback:
             return feedback

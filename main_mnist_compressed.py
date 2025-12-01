@@ -1,12 +1,17 @@
 import random
-random.seed(0)
+random.seed(100)
 
 import argparse
 
 import mnist
 from tsetlin import Tsetlin
 
-from tsetlin.utils.log import log
+import sys
+from loguru import logger
+logger.remove()
+logger.add("train.log", level="DEBUG", colorize=False, backtrace=True, diagnose=True)
+logger.add(sys.stdout, level="INFO")
+
 from tsetlin.utils.tqdm import m_tqdm
 from tsetlin.utils.dataset import balance_dataset
 
@@ -24,31 +29,16 @@ y_test = mnist.test_labels()
 X_test[X_test <= 75] = 0
 X_test[X_test > 75] = 1
 
-indices = balance_dataset(X_train, y_train, num_per_class=100)
+indices = balance_dataset(X_train, y_train, num_per_class=10)
 X_train = X_train[indices]
 y_train = y_train[indices]
 
-indices = balance_dataset(X_test, y_test, num_per_class=20)
+indices = balance_dataset(X_test, y_test, num_per_class=2)
 X_test = X_test[indices]
 y_test = y_test[indices]
 
-log(f"Train images shape: {X_train.shape}, Train labels shape: {y_train.shape}")
-log(f"Test images shape: {X_test.shape}, Test labels shape: {y_test.shape}")
-
-def ask_compression():
-    while True:
-        choice = input("Compress and Exit? (y/n): ").strip().lower()
-
-        if choice in ("y", "n"):
-            break
-        print("Please enter 'y' or 'n'.")
-
-    if choice == "y":
-        print("Yes selected")
-        return True
-    else:
-        print("No selected")
-        return False
+logger.info(f"Train images shape: {X_train.shape}, Train labels shape: {y_train.shape}")
+logger.info(f"Test images shape: {X_test.shape}, Test labels shape: {y_test.shape}")
 
 def plot_histogram(tsetlin):
     cube = []
@@ -96,11 +86,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tsetlin Machine on Iris Dataset")
     parser.add_argument("--epochs", type=int, default=5, help="Number of training epochs")
 
-    parser.add_argument("--n_clause", type=int, default=200, help="Number of clauses")
-    parser.add_argument("--n_state", type=int, default=100, help="Number of states")
-    
     parser.add_argument("--T", type=int, default=100, help="Threshold T")
     parser.add_argument("--s", type=float, default=5.0, help="Specificity s")
+    parser.add_argument("--threshold", type=float, default=-1, help="Threshold for compressed TM")
 
     parser.add_argument("--feedback", action='store_true')
     parser.add_argument("--compression", action='store_true')
@@ -108,11 +96,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     N_EPOCHS = args.epochs
-    N_CLAUSE = args.n_clause
-    N_STATE  = args.n_state
-
-    log(f"Number of clauses: {N_CLAUSE}, Number of states: {N_STATE}")
-    log(f"Threshold T: {args.T}, Specificity s: {args.s}")
 
     # Flatten images
     X_train = X_train.reshape((X_train.shape[0], -1))
@@ -122,12 +105,24 @@ if __name__ == "__main__":
     # X_train = booleanize_features(X_train, 0, 1.0, num_bits=N_BIT)
     # X_test = booleanize_features(X_test, 0, 1.0, num_bits=N_BIT)
 
-    tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=10, N_clause=N_CLAUSE, N_state=N_STATE)
+    # Load the model
+    tsetlin = Tsetlin.load_model("tsetlin_model.pb")
+    logger.info("Model loaded from tsetlin_model.pb")
 
-    y_pred = tsetlin.predict(X_train)
-    accuracy = sum(y_pred == y_train) / len(y_train)
+    logger.info(f"Number of clauses: {tsetlin.n_clauses}, Number of states: {tsetlin.n_states}")
+    logger.info(f"Threshold T: {args.T}, Specificity s: {args.s}")
+
+    # Evaluate the loaded model
+    y_pred = tsetlin.predict(X_test)
+    accuracy = sum(y_pred == y_test) / len(y_test)
+
+    logger.info(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
 
     # plot_histogram(tsetlin)
+
+    # Evaluate the loaded model
+    y_pred = tsetlin.predict(X_train)
+    accuracy = sum(y_pred == y_train) / len(y_train)
 
     target_type_1_count_list = []
     target_type_2_count_list = []
@@ -135,37 +130,39 @@ if __name__ == "__main__":
     non_target_type_2_count_list = []
 
     for epoch in range(N_EPOCHS):
-        log(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
+        logger.info(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
+
         target_type_1_count = 0
         target_type_2_count = 0
         non_target_type_1_count = 0
         non_target_type_2_count = 0
+
         for i in m_tqdm(range(len(X_train))):
-            feedback = tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s, return_feedback=args.feedback)
+            feedback = tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s, return_feedback=args.feedback, threshold=args.threshold, logger=logger)
+
             if args.feedback:
                 target_type_1_count += feedback['target']['type-1']
                 target_type_2_count += feedback['target']['type-2']
                 non_target_type_1_count += feedback['non-target']['type-1']
                 non_target_type_2_count += feedback['non-target']['type-2']
+
         if args.feedback:
             target_type_1_rel_change = 0.0
             target_type_2_rel_change = 0.0
             if len(target_type_1_count_list) > 0:
                 target_type_1_rel_change = abs((target_type_1_count - target_type_1_count_list[-1]) / target_type_1_count_list[-1] * 100)
                 target_type_2_rel_change = abs((target_type_2_count - target_type_2_count_list[-1]) / target_type_2_count_list[-1] * 100)
+            logger.info(f"Target Type I Feedbacks: {target_type_1_count}, Tolerance {target_type_1_rel_change:.2f}%, Target Type II Feedbacks: {target_type_2_count}, Tolerance {target_type_2_rel_change:.2f}%")
+
             non_target_type_1_rel_change = 0.0
             non_target_type_2_rel_change = 0.0
             if len(non_target_type_1_count_list) > 0:
                 non_target_type_1_rel_change = abs((non_target_type_1_count - non_target_type_1_count_list[-1]) / non_target_type_1_count_list[-1] * 100)
                 non_target_type_2_rel_change = abs((non_target_type_2_count - non_target_type_2_count_list[-1]) / non_target_type_2_count_list[-1] * 100)
-            log(f"Target Type I Feedbacks: {target_type_1_count}, Tolerance {target_type_1_rel_change:.2f}%, Target Type II Feedbacks: {target_type_2_count}, Tolerance {target_type_2_rel_change:.2f}%")
-            log(f"Non-Target Type I Feedbacks: {non_target_type_1_count}, Tolerance {non_target_type_1_rel_change:.2f}%, Non-Target Type II Feedbacks: {non_target_type_2_count}, Tolerance {non_target_type_2_rel_change:.2f}% ")
+            logger.info(f"Non-Target Type I Feedbacks: {non_target_type_1_count}, Tolerance {non_target_type_1_rel_change:.2f}%, Non-Target Type II Feedbacks: {non_target_type_2_count}, Tolerance {non_target_type_2_rel_change:.2f}% ")
+
         y_pred = tsetlin.predict(X_train)
         accuracy = sum(y_pred == y_train) / len(y_train)
-
-        if args.compression:
-            if ask_compression():
-                break
 
         # plot_histogram(tsetlin)
 
@@ -177,7 +174,7 @@ if __name__ == "__main__":
     
     if args.feedback:
         import matplotlib.pyplot as plt
-        epochs = list(range(1, len(target_type_1_count_list) + 1))
+        epochs = list(range(1, N_EPOCHS + 1))
         plt.plot(epochs, target_type_1_count_list, label='Target Type I')
         plt.plot(epochs, target_type_2_count_list, label='Target Type II')
         plt.plot(epochs, non_target_type_1_count_list, label='Non-Target Type I')
@@ -190,26 +187,16 @@ if __name__ == "__main__":
 
     # tsetlin.fit(X_train, y_train, T=15, s=3, epochs=EPOCHS)
 
-    log("")
+    logger.info("")
 
     # Final evaluation
     y_pred = tsetlin.predict(X_test)
     accuracy = sum(y_pred == y_test) / len(y_test)
 
-    log(f"Test Accuracy: {accuracy * 100:.2f}%")
+    logger.info(f"Test Accuracy: {accuracy * 100:.2f}%")
 
     # Save the model
-    tsetlin.save_model("tsetlin_model.pb", type="training")
-    log("Model saved to tsetlin_model.pb")
+    # tsetlin.save_model("tsetlin_model_compressed.pb", type="training")
+    # log("Model saved to tsetlin_model_compressed.pb")
 
-    log("")
-
-    # Load the model
-    n_tsetlin = Tsetlin.load_model("tsetlin_model.pb")
-    log("Model loaded from tsetlin_model.pb")
-
-    # Evaluate the loaded model
-    n_y_pred = n_tsetlin.predict(X_test)
-    accuracy = sum(n_y_pred == y_test) / len(y_test)
-
-    log(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
+    # log("")
