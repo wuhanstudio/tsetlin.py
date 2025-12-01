@@ -72,8 +72,8 @@ class Clause:
             if clause_output == 0:
                 for i in range(self.N_feature):
                     # Positive automaton
-                    if self.p_automata[i].state > 1 and random.random() <= s1:
-                        if threshold < 0 or abs(self.p_automata[i].state - self.N_states // 2) <= threshold:
+                    if threshold < 0 or abs(self.p_automata[i].state - self.N_states // 2) <= threshold:
+                        if self.p_automata[i].state > 1 and random.random() <= s1:
                             feedback_count += 1
                             # if logger is not None:
                             #     logger.debug(f"Type I Feedback, Erase Pattern: Positive automaton for feature {i}, penalty applied.")
@@ -83,8 +83,8 @@ class Clause:
                                     logger.debug(f"Type I Feedback, Erase Pattern: Positive literal for feature {i} removed from included literals.")
 
                     # Negative automaton
-                    if self.n_automata[i].state > 1 and random.random() <= s1:
-                        if threshold < 0 or abs(self.n_automata[i].state - self.N_states // 2) <= threshold:
+                    if threshold < 0 or abs(self.n_automata[i].state - self.N_states // 2) <= threshold:
+                        if self.n_automata[i].state > 1 and random.random() <= s1:
                             # if logger is not None:
                             #     logger.debug(f"Type I Feedback, Erase Pattern: Negative automaton for feature {i}, penalty applied.")
                             feedback_count += 1
@@ -99,8 +99,8 @@ class Clause:
                 for i in range(self.N_feature):
                     # Positive literal X
                     if X[i] == 1:
-                        if self.p_automata[i].state < self.N_states and random.random() <= s2:
-                            if threshold < 0 or abs(self.p_automata[i].state - self.N_states // 2) <= threshold:
+                        if threshold < 0 or abs(self.p_automata[i].state - self.N_states // 2) <= threshold:
+                            if self.p_automata[i].state < self.N_states and random.random() <= s2:
                                 feedback_count += 1
                                 # if logger is not None:
                                 #     logger.debug(f"Type I Feedback, Recognize Pattern: Positive automaton for feature {i}, reward applied.")
@@ -109,8 +109,8 @@ class Clause:
                                     if logger is not None:
                                         logger.debug(f"Type I Feedback, Recognize Pattern: Positive literal for feature {i} added to included literals.")
 
-                        if self.n_automata[i].state > 1 and random.random() <= s1:
-                            if threshold < 0 or abs(self.n_automata[i].state - self.N_states // 2) <= threshold:
+                        if threshold < 0 or abs(self.n_automata[i].state - self.N_states // 2) <= threshold:
+                            if self.n_automata[i].state > 1 and random.random() <= s1:
                                 feedback_count += 1
                                 # if logger is not None:
                                 #     logger.debug(f"Type I Feedback, Recognize Pattern: Negative automaton for feature {i}, penalty applied.")
@@ -120,8 +120,8 @@ class Clause:
                                         logger.debug(f"Type I Feedback, Recognize Pattern: Negative literal for feature {i} removed from included literals.")
                     # Negative literal NOT X
                     elif X[i] == 0:
-                        if self.n_automata[i].state < self.N_states and random.random() <= s2:
-                            if threshold < 0 or abs(self.n_automata[i].state - self.N_states // 2) <= threshold:
+                        if threshold < 0 or abs(self.n_automata[i].state - self.N_states // 2) <= threshold:
+                            if self.n_automata[i].state < self.N_states and random.random() <= s2:
                                 feedback_count += 1
                                 # if logger is not None:
                                 #     logger.debug(f"Type I Feedback, Recognize Pattern: Negative automaton for feature {i}, reward applied.")
@@ -130,8 +130,8 @@ class Clause:
                                     if logger is not None:
                                         logger.debug(f"Type I Feedback, Recognize Pattern: Negative literal for feature {i} added to included literals.")
 
-                        if self.p_automata[i].state > 1 and random.random() <= s1:
-                            if threshold < 0 or abs(self.p_automata[i].state - self.N_states // 2) <= threshold:
+                        if threshold < 0 or abs(self.p_automata[i].state - self.N_states // 2) <= threshold:
+                            if self.p_automata[i].state > 1 and random.random() <= s1:
                                 feedback_count += 1
                                 # if logger is not None:
                                 #     logger.debug(f"Type I Feedback, Recognize Pattern: Positive automaton for feature {i}, penalty applied.")
@@ -156,21 +156,23 @@ class Clause:
 
                     # Original paper implementation
                     if (X[i] == 0) and (self.p_automata[i].action == 0): 
-                        feedback_count += 1
-                        # if logger is not None:
-                        #     logger.debug(f"Type II Feedback: Positive automaton for feature {i}, reward applied.")
-                        if self.p_automata[i].reward():
-                            self.p_included_literals.append(i)
-                            if logger is not None:
-                                logger.debug(f"Type II Feedback: Positive literal for feature {i} added to included literals.")
+                        if threshold < 0 or abs(self.p_automata[i].state - self.N_states // 2) <= threshold:
+                            feedback_count += 1
+                            # if logger is not None:
+                            #     logger.debug(f"Type II Feedback: Positive automaton for feature {i}, reward applied.")
+                            if self.p_automata[i].reward():
+                                self.p_included_literals.append(i)
+                                if logger is not None:
+                                    logger.debug(f"Type II Feedback: Positive literal for feature {i} added to included literals.")
                     elif (X[i] == 1) and (self.n_automata[i].action == 0):
-                        feedback_count += 1
-                        # if logger is not None:
-                        #     logger.debug(f"Type II Feedback: Negative automaton for feature {i}, reward applied.")
-                        if self.n_automata[i].reward():
-                            self.n_included_literals.append(i)
-                            if logger is not None:
-                                logger.debug(f"Type II Feedback: Negative literal for feature {i} added to included literals.")
+                        if threshold < 0 or abs(self.n_automata[i].state - self.N_states // 2) <= threshold:
+                            feedback_count += 1
+                            # if logger is not None:
+                            #     logger.debug(f"Type II Feedback: Negative automaton for feature {i}, reward applied.")
+                            if self.n_automata[i].reward():
+                                self.n_included_literals.append(i)
+                                if logger is not None:
+                                    logger.debug(f"Type II Feedback: Negative literal for feature {i} added to included literals.")
 
         return feedback_count
 
