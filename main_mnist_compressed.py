@@ -106,7 +106,7 @@ if __name__ == "__main__":
     # X_test = booleanize_features(X_test, 0, 1.0, num_bits=N_BIT)
 
     # Load the model
-    tsetlin = Tsetlin.load_model("tsetlin_model.pb")
+    tsetlin = Tsetlin.load_model("tsetlin_model.pb", threshold=args.threshold)
     logger.info("Model loaded from tsetlin_model.pb")
 
     logger.info(f"Number of clauses: {tsetlin.n_clauses}, Number of states: {tsetlin.n_states}")
@@ -138,7 +138,7 @@ if __name__ == "__main__":
         non_target_type_2_count = 0
 
         for i in m_tqdm(range(len(X_train))):
-            feedback = tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s, return_feedback=args.feedback, threshold=args.threshold, logger=logger)
+            feedback = tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s, return_feedback=args.feedback, threshold=args.threshold, logger=None)
 
             if args.feedback:
                 target_type_1_count += feedback['target']['type-1']

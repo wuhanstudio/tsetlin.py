@@ -122,7 +122,7 @@ class Tsetlin:
                 self.step(X[i], y[i], T=T, s=s)
 
     @staticmethod
-    def load_model(path):
+    def load_model(path, threshold=-1):
         import tsetlin_pb2
         tm = tsetlin_pb2.Tsetlin()
 
@@ -146,12 +146,12 @@ class Tsetlin:
 
                 # Set positive clauses
                 pos_clause = Clause(tm_model.n_features, tm_model.n_states)
-                pos_clause.set_state(p_clause.data)
+                pos_clause.set_state(p_clause.data, threshold=threshold)
                 pos_clauses.append(pos_clause)
 
                 # Set negative clauses
                 neg_clause = Clause(tm_model.n_features, tm_model.n_states)
-                neg_clause.set_state(n_clause.data)
+                neg_clause.set_state(n_clause.data, threshold=threshold)
                 neg_clauses.append(neg_clause)
 
             tm_model.pos_clauses.append(pos_clauses)
