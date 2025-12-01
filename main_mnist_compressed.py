@@ -150,15 +150,19 @@ if __name__ == "__main__":
             target_type_1_rel_change = 0.0
             target_type_2_rel_change = 0.0
             if len(target_type_1_count_list) > 0:
-                target_type_1_rel_change = abs((target_type_1_count - target_type_1_count_list[-1]) / target_type_1_count_list[-1] * 100)
-                target_type_2_rel_change = abs((target_type_2_count - target_type_2_count_list[-1]) / target_type_2_count_list[-1] * 100)
+                if target_type_1_count_list[-1] != 0:
+                    target_type_1_rel_change = abs((target_type_1_count - target_type_1_count_list[-1]) / target_type_1_count_list[-1] * 100)
+                if target_type_2_count_list[-1] != 0:
+                    target_type_2_rel_change = abs((target_type_2_count - target_type_2_count_list[-1]) / target_type_2_count_list[-1] * 100)
             logger.info(f"Target Type I Feedbacks: {target_type_1_count}, Tolerance {target_type_1_rel_change:.2f}%, Target Type II Feedbacks: {target_type_2_count}, Tolerance {target_type_2_rel_change:.2f}%")
 
             non_target_type_1_rel_change = 0.0
             non_target_type_2_rel_change = 0.0
             if len(non_target_type_1_count_list) > 0:
-                non_target_type_1_rel_change = abs((non_target_type_1_count - non_target_type_1_count_list[-1]) / non_target_type_1_count_list[-1] * 100)
-                non_target_type_2_rel_change = abs((non_target_type_2_count - non_target_type_2_count_list[-1]) / non_target_type_2_count_list[-1] * 100)
+                if non_target_type_1_count_list[-1] != 0:
+                    non_target_type_1_rel_change = abs((non_target_type_1_count - non_target_type_1_count_list[-1]) / non_target_type_1_count_list[-1] * 100)
+                if non_target_type_2_count_list[-1] != 0:
+                    non_target_type_2_rel_change = abs((non_target_type_2_count - non_target_type_2_count_list[-1]) / non_target_type_2_count_list[-1] * 100)
             logger.info(f"Non-Target Type I Feedbacks: {non_target_type_1_count}, Tolerance {non_target_type_1_rel_change:.2f}%, Non-Target Type II Feedbacks: {non_target_type_2_count}, Tolerance {non_target_type_2_rel_change:.2f}% ")
 
         y_pred = tsetlin.predict(X_train)
