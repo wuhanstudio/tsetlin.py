@@ -12,17 +12,20 @@ class TestClause(unittest.TestCase):
         clause = Clause(N_feature=3, N_state=10)
         
         # Manually set automata states to control actions
-        clause.p_automata[0].state = 6  # Include feature 0
-        clause.n_automata[0].state = 5  # Exclude (NOT feature 0)
+        clause.p_automata[0] = 6  # Include feature 0
+        clause.n_automata[0] = 5  # Exclude (NOT feature 0)
 
-        clause.p_automata[1].state = 4  # Exclude feature 1
-        clause.n_automata[1].state = 7  # Include (NOT feature 1)
+        clause.p_automata[1] = 4  # Exclude feature 1
+        clause.n_automata[1] = 7  # Include (NOT feature 1)
 
-        clause.p_automata[2].state = 6  # Include feature 2
-        clause.n_automata[2].state = 5  # Exclude (NOT feature 2)
+        clause.p_automata[2] = 6  # Include feature 2
+        clause.n_automata[2] = 5  # Exclude (NOT feature 2)
+
+        clause.compress()
 
         # Test case where clause should evaluate to 1
         X = np.array([1, 0, 1])  # Feature 0 included, Feature 1 excluded, Feature 2 included
+    
         output = clause.evaluate(X)
         self.assertEqual(output, 1)
         
@@ -37,12 +40,14 @@ class TestClause(unittest.TestCase):
         clause = Clause(N_feature=2, N_state=10)
         
         # Manually set automata states to control actions
-        clause.p_automata[0].state = 6  # Include feature 0
-        clause.n_automata[0].state = 5  # Exclude (NOT feature 0)
+        clause.p_automata[0] = 6  # Include feature 0
+        clause.n_automata[0] = 5  # Exclude (NOT feature 0)
 
-        clause.p_automata[1].state = 4  # Exclude feature 1
-        clause.n_automata[1].state = 7  # Include (NOT feature 1)
-
+        clause.p_automata[1] = 4  # Exclude feature 1
+        clause.n_automata[1] = 7  # Include (NOT feature 1)
+        
+        clause.compress()
+        
         X = np.array([1, 0])  # Feature vector
 
         clause_output = clause.evaluate(X)  # Should be 1
@@ -52,4 +57,4 @@ class TestClause(unittest.TestCase):
         clause.update(X, 1, clause_output, s=3)
 
         # Check if automata states have been updated correctly
-        self.assertTrue(clause.p_automata[0].state >= 6)
+        self.assertTrue(clause.p_automata[0] >= 6)

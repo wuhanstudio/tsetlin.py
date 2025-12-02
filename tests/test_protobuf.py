@@ -12,10 +12,10 @@ class TestProtobuf(unittest.TestCase):
         tsetlin.n_clause = 100
         tsetlin.n_state = 400
 
-        tsetlin.model_type = tsetlin_pb2.Tsetlin.ModelType.INFERENCE
+        tsetlin.model_type = tsetlin_pb2.ModelType.INFERENCE
 
         assert tsetlin.n_class == 3
         assert tsetlin.n_feature == 32
         assert tsetlin.n_clause == 100
         assert tsetlin.n_state == 400
-        assert tsetlin.model_type == tsetlin_pb2.Tsetlin.ModelType.INFERENCE
+        assert tsetlin.model_type == tsetlin_pb2.ModelType.INFERENCE
