@@ -106,10 +106,11 @@ class Clause:
                 for i in targets:
                     if self.p_automata[i].state > 1 and random.random() <= s1:
                         feedback_count += 1
-                        if self.p_automata[i].penalty() and i in self.p_included_literals:
-                            self.p_included_literals.remove(i)
+                        if self.p_automata[i].penalty():
                             if not self.is_micro:
                                 self.p_included_mask[i] = 0
+                            elif i in self.p_included_literals:
+                                self.p_included_literals.remove(i)
                             if logger is not None:
                                 logger.debug(f"Type I Feedback, Erase Pattern: Positive literal for feature {i} removed from included literals.")
 
@@ -118,10 +119,11 @@ class Clause:
                 for i in targets:
                     if self.n_automata[i].state > 1 and random.random() <= s1:
                         feedback_count += 1
-                        if self.n_automata[i].penalty() and i in self.n_included_literals:
-                            self.n_included_literals.remove(i)
+                        if self.n_automata[i].penalty():
                             if not self.is_micro:
                                 self.n_included_mask[i] = 0
+                            elif i in self.n_included_literals:
+                                self.n_included_literals.remove(i)
                             if logger is not None:
                                 logger.debug(f"Type I Feedback, Erase Pattern: Negative literal for feature {i} removed from included literals.")
 
@@ -134,18 +136,20 @@ class Clause:
                     if X[i] == 1 and self.p_automata[i].state < self.N_states and random.random() <= s2:
                         feedback_count += 1
                         if self.p_automata[i].reward():
-                            self.p_included_literals.append(i)
                             if not self.is_micro:
                                 self.p_included_mask[i] = 1
+                            else:
+                                self.p_included_literals.append(i)
                             if logger is not None:
                                 logger.debug(f"Type I Feedback, Recognize Pattern: Positive literal for feature {i} added to included literals.")
 
                     elif X[i] == 0 and self.p_automata[i].state > 1 and random.random() <= s1:
                         feedback_count += 1
-                        if self.p_automata[i].penalty() and i in self.p_included_literals:
-                            self.p_included_literals.remove(i)
+                        if self.p_automata[i].penalty():
                             if not self.is_micro:
                                 self.p_included_mask[i] = 0
+                            elif i in self.p_included_literals:
+                                self.p_included_literals.remove(i)
                             if logger is not None:
                                 logger.debug(f"Type I Feedback, Recognize Pattern: Positive literal for feature {i} removed from included literals.")
 
@@ -154,19 +158,21 @@ class Clause:
                 for i in targets:
                     if X[i] == 1 and self.n_automata[i].state > 1 and random.random() <= s1:
                         feedback_count += 1
-                        if self.n_automata[i].penalty() and i in self.n_included_literals:
-                            self.n_included_literals.remove(i)
+                        if self.n_automata[i].penalty():
                             if not self.is_micro:
                                 self.n_included_mask[i] = 0
+                            elif i in self.n_included_literals:
+                                self.n_included_literals.remove(i)
                             if logger is not None:
                                 logger.debug(f"Type I Feedback, Recognize Pattern: Negative literal for feature {i} removed from included literals.")
  
                     elif X[i] == 0 and self.n_automata[i].state < self.N_states and random.random() <= s2:
                         feedback_count += 1
                         if self.n_automata[i].reward():
-                            self.n_included_literals.append(i)
                             if not self.is_micro:
                                 self.n_included_mask[i] = 1
+                            elif i in self.n_included_literals:
+                                self.n_included_literals.append(i)
                             if logger is not None:
                                 logger.debug(f"Type I Feedback, Recognize Pattern: Negative literal for feature {i} added to included literals.")
 
@@ -179,9 +185,10 @@ class Clause:
                     if (X[i] == 0) and (self.p_automata[i].action == 0): 
                         feedback_count += 1
                         if self.p_automata[i].reward():
-                            self.p_included_literals.append(i)
                             if not self.is_micro:
                                 self.p_included_mask[i] = 1
+                            else:
+                                self.p_included_literals.append(i)
                             if logger is not None:
                                 logger.debug(f"Type II Feedback: Positive literal for feature {i} added to included literals.")
 
@@ -190,9 +197,10 @@ class Clause:
                     if (X[i] == 1) and (self.n_automata[i].action == 0):
                         feedback_count += 1
                         if self.n_automata[i].reward():
-                            self.n_included_literals.append(i)
                             if not self.is_micro:
                                 self.n_included_mask[i] = 1
+                            else:
+                                self.n_included_literals.append(i)
                             if logger is not None:
                                 logger.debug(f"Type II Feedback: Negative literal for feature {i} added to included literals.")
 

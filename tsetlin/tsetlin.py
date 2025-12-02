@@ -32,9 +32,11 @@ class Tsetlin:
             Xi = X[i]
             votes = [0] * self.n_classes
             for c in range(self.n_classes):
+                pos_clause = self.pos_clauses[c]
+                neg_clause = self.neg_clauses[c]
                 for j in range(n_half):
-                    votes[c] += self.pos_clauses[c][j].evaluate(Xi)
-                    votes[c] -= self.neg_clauses[c][j].evaluate(Xi)
+                    votes[c] += pos_clause[j].evaluate(Xi)
+                    votes[c] -= neg_clause[j].evaluate(Xi)
 
             y_pred[i] = argmax(votes)
 
