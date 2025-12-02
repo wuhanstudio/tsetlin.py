@@ -1,4 +1,5 @@
 import random
+import sys
 
 from tsetlin.clause import Clause
 from tsetlin.utils import argmax, clip, to_int32
@@ -25,13 +26,16 @@ class Tsetlin:
 
     def predict(self, X, return_votes=False, n_jobs=8):
         y_pred = [0] * len(X)
+        n_half = int(self.n_clauses / 2)
+
         votes_list = []
-        for i in m_tqdm(range(len(X)), desc="Evaluating"):
+        for i in m_tqdm(range(len(X)), desc="Predicting", ascii=True):
+            Xi = X[i]
             votes = [0] * self.n_classes
             for c in range(self.n_classes):
-                for j in range(int(self.n_clauses / 2)):
-                    votes[c] += self.pos_clauses[c][j].evaluate(X[i])
-                    votes[c] -= self.neg_clauses[c][j].evaluate(X[i])
+                for j in range(n_half):
+                    votes[c] += self.pos_clauses[c][j].evaluate(Xi)
+                    votes[c] -= self.neg_clauses[c][j].evaluate(Xi)
 
             y_pred[i] = argmax(votes)
 
@@ -117,7 +121,7 @@ class Tsetlin:
             return feedback
 
     def fit(self, X, y, T, s, epochs):
-        for epoch in m_tqdm(range(epochs), desc="Training Epochs"):
+        for epoch in m_tqdm(range(epochs), ascii=True, desc="Training Epochs"):
             for i in range(len(X)):
                 self.step(X[i], y[i], T=T, s=s)
 

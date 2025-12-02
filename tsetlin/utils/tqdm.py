@@ -8,5 +8,5 @@ if sys.implementation.name == 'micropython':
 if USE_TQDM:
     from tqdm import tqdm
 
-def m_tqdm(iterable, desc=""):
-    return tqdm(iterable, desc=desc) if USE_TQDM else iterable
+def m_tqdm(iterable, desc="", ascii=True):
+    return tqdm(iterable, desc=desc, ascii=ascii) if USE_TQDM else iterable
