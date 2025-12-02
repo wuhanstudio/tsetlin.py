@@ -2,6 +2,7 @@ import random
 random.seed(0)
 
 import argparse
+from bitarray import bitarray
 
 import mnist
 from tsetlin import Tsetlin
@@ -121,6 +122,10 @@ if __name__ == "__main__":
     # Normalization (not really needed for MNIST)
     # X_train = booleanize_features(X_train, 0, 1.0, num_bits=N_BIT)
     # X_test = booleanize_features(X_test, 0, 1.0, num_bits=N_BIT)
+
+    # Convert to bitarray
+    X_train = [bitarray(list(map(bool, x))) for x in X_train]
+    X_test = [bitarray(list(map(bool, x))) for x in X_test]
 
     tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=10, N_clause=N_CLAUSE, N_state=N_STATE)
 

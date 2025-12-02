@@ -3,6 +3,8 @@ random.seed(100)
 
 import argparse
 
+from bitarray import bitarray
+
 import mnist
 from tsetlin import Tsetlin
 
@@ -100,6 +102,10 @@ if __name__ == "__main__":
     # Flatten images
     X_train = X_train.reshape((X_train.shape[0], -1))
     X_test = X_test.reshape((X_test.shape[0], -1))
+    
+    # Convert to bitarray
+    X_train = [bitarray(list(map(bool, x))) for x in X_train]
+    X_test = [bitarray(list(map(bool, x))) for x in X_test]
 
     # Normalization (not really needed for MNIST)
     # X_train = booleanize_features(X_train, 0, 1.0, num_bits=N_BIT)

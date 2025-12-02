@@ -2,6 +2,10 @@ import random
 
 from tsetlin.automaton import Automaton
 
+import sys
+if sys.implementation.name != 'micropython':
+    from bitarray import bitarray
+
 class Clause:
     def __init__(self, N_feature, N_state):
 
@@ -21,17 +25,26 @@ class Clause:
             self.p_automata[i].state = N_state // 2 + choice
             self.n_automata[i].state = N_state // 2 + (1 - choice)
 
+        self.is_micro = (sys.implementation.name == 'micropython')
         self.compress()
 
     def compress(self, threshold=-1):
+        if not self.is_micro:
+            self.p_included_mask = bitarray(self.N_feature)
+            self.n_included_mask = bitarray(self.N_feature)
+
         # Get the index of included literals
         self.p_included_literals = []
         self.n_included_literals = []
         for i in range(self.N_feature):
             if self.p_automata[i].action == 1:
                 self.p_included_literals.append(i)
+                if not self.is_micro:
+                    self.p_included_mask[i] = 1
             if self.n_automata[i].action == 1:
                 self.n_included_literals.append(i)
+                if not self.is_micro:
+                    self.n_included_mask[i] = 1
 
         if threshold > 0:
             self.p_trainable_literals = []
@@ -43,12 +56,21 @@ class Clause:
                     self.n_trainable_literals.append(i)
 
     def evaluate(self, X):
-        for i in self.p_included_literals:
-            if X[i] == 0:
+        if not self.is_micro:
+            # Evaluate with compression (faster)
+            if not isinstance(X, bitarray):
+                X = bitarray(list(map(bool, X)))
+            if X & self.p_included_mask != self.p_included_mask:
                 return 0
-        for i in self.n_included_literals:
-            if X[i] == 1:
+            if (~X) & self.n_included_mask != self.n_included_mask:
                 return 0
+        else:
+            for i in self.p_included_literals:
+                if X[i] == 0:
+                    return 0
+            for i in self.n_included_literals:
+                if X[i] == 1:
+                    return 0
         return 1
 
         # Evaluate without compression (slower)
@@ -86,6 +108,8 @@ class Clause:
                         feedback_count += 1
                         if self.p_automata[i].penalty() and i in self.p_included_literals:
                             self.p_included_literals.remove(i)
+                            if not self.is_micro:
+                                self.p_included_mask[i] = 0
                             if logger is not None:
                                 logger.debug(f"Type I Feedback, Erase Pattern: Positive literal for feature {i} removed from included literals.")
 
@@ -96,6 +120,8 @@ class Clause:
                         feedback_count += 1
                         if self.n_automata[i].penalty() and i in self.n_included_literals:
                             self.n_included_literals.remove(i)
+                            if not self.is_micro:
+                                self.n_included_mask[i] = 0
                             if logger is not None:
                                 logger.debug(f"Type I Feedback, Erase Pattern: Negative literal for feature {i} removed from included literals.")
 
@@ -109,6 +135,8 @@ class Clause:
                         feedback_count += 1
                         if self.p_automata[i].reward():
                             self.p_included_literals.append(i)
+                            if not self.is_micro:
+                                self.p_included_mask[i] = 1
                             if logger is not None:
                                 logger.debug(f"Type I Feedback, Recognize Pattern: Positive literal for feature {i} added to included literals.")
 
@@ -116,6 +144,8 @@ class Clause:
                         feedback_count += 1
                         if self.p_automata[i].penalty() and i in self.p_included_literals:
                             self.p_included_literals.remove(i)
+                            if not self.is_micro:
+                                self.p_included_mask[i] = 0
                             if logger is not None:
                                 logger.debug(f"Type I Feedback, Recognize Pattern: Positive literal for feature {i} removed from included literals.")
 
@@ -126,6 +156,8 @@ class Clause:
                         feedback_count += 1
                         if self.n_automata[i].penalty() and i in self.n_included_literals:
                             self.n_included_literals.remove(i)
+                            if not self.is_micro:
+                                self.n_included_mask[i] = 0
                             if logger is not None:
                                 logger.debug(f"Type I Feedback, Recognize Pattern: Negative literal for feature {i} removed from included literals.")
  
@@ -133,6 +165,8 @@ class Clause:
                         feedback_count += 1
                         if self.n_automata[i].reward():
                             self.n_included_literals.append(i)
+                            if not self.is_micro:
+                                self.n_included_mask[i] = 1
                             if logger is not None:
                                 logger.debug(f"Type I Feedback, Recognize Pattern: Negative literal for feature {i} added to included literals.")
 
@@ -146,6 +180,8 @@ class Clause:
                         feedback_count += 1
                         if self.p_automata[i].reward():
                             self.p_included_literals.append(i)
+                            if not self.is_micro:
+                                self.p_included_mask[i] = 1
                             if logger is not None:
                                 logger.debug(f"Type II Feedback: Positive literal for feature {i} added to included literals.")
 
@@ -155,6 +191,8 @@ class Clause:
                         feedback_count += 1
                         if self.n_automata[i].reward():
                             self.n_included_literals.append(i)
+                            if not self.is_micro:
+                                self.n_included_mask[i] = 1
                             if logger is not None:
                                 logger.debug(f"Type II Feedback: Negative literal for feature {i} added to included literals.")
 

@@ -1,5 +1,4 @@
 import random
-import sys
 
 from tsetlin.clause import Clause
 from tsetlin.utils import argmax, clip, to_int32
