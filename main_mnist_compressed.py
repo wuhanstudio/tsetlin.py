@@ -29,13 +29,13 @@ y_test = mnist.test_labels()
 X_test[X_test <= 75] = 0
 X_test[X_test > 75] = 1
 
-indices = balance_dataset(X_train, y_train, num_per_class=10)
-X_train = X_train[indices]
-y_train = y_train[indices]
+# indices = balance_dataset(X_train, y_train, num_per_class=10)
+# X_train = X_train[indices]
+# y_train = y_train[indices]
 
-indices = balance_dataset(X_test, y_test, num_per_class=2)
-X_test = X_test[indices]
-y_test = y_test[indices]
+# indices = balance_dataset(X_test, y_test, num_per_class=2)
+# X_test = X_test[indices]
+# y_test = y_test[indices]
 
 logger.info(f"Train images shape: {X_train.shape}, Train labels shape: {y_train.shape}")
 logger.info(f"Test images shape: {X_test.shape}, Test labels shape: {y_test.shape}")

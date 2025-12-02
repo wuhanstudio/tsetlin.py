@@ -79,160 +79,84 @@ class Clause:
             # Erase Pattern
             # Reduce the number of included literals
             if clause_output == 0:
-                if threshold < 0:
-                    # No thresholding, all automata are trainable
-                    for i in range(self.N_feature):
-                        # Positive automaton
-                        if self.p_automata[i].state > 1 and random.random() <= s1:
-                            feedback_count += 1
-                            if self.p_automata[i].penalty() and i in self.p_included_literals:
-                                self.p_included_literals.remove(i)
-                                if logger is not None:
-                                    logger.debug(f"Type I Feedback, Erase Pattern: Positive literal for feature {i} removed from included literals.")
+                # Positive literal X
+                targets = range(self.N_feature) if threshold < 0 else self.p_trainable_literals
+                for i in targets:
+                    if self.p_automata[i].state > 1 and random.random() <= s1:
+                        feedback_count += 1
+                        if self.p_automata[i].penalty() and i in self.p_included_literals:
+                            self.p_included_literals.remove(i)
+                            if logger is not None:
+                                logger.debug(f"Type I Feedback, Erase Pattern: Positive literal for feature {i} removed from included literals.")
 
-                        # Negative automaton
-                        if self.n_automata[i].state > 1 and random.random() <= s1:
-                            feedback_count += 1
-                            if self.n_automata[i].penalty() and i in self.n_included_literals:
-                                self.n_included_literals.remove(i)
-                                if logger is not None:
-                                    logger.debug(f"Type I Feedback, Erase Pattern: Negative literal for feature {i} removed from included literals.")
-                else:
-                    # With thresholding, only trainable automata are updated
-                    for i in self.p_trainable_literals:
-                        if self.p_automata[i].state > 1 and random.random() <= s1:
-                            feedback_count += 1
-                            if self.p_automata[i].penalty() and i in self.p_included_literals:
-                                self.p_included_literals.remove(i)
-                                if logger is not None:
-                                    logger.debug(f"Type I Feedback, Erase Pattern: Positive literal for feature {i} removed from included literals.")
-
-                    for i in self.n_trainable_literals:
-                        if self.n_automata[i].state > 1 and random.random() <= s1:
-                            feedback_count += 1
-                            if self.n_automata[i].penalty() and i in self.n_included_literals:
-                                self.n_included_literals.remove(i)
-                                if logger is not None:
-                                    logger.debug(f"Type I Feedback, Erase Pattern: Negative literal for feature {i} removed from included literals.")
+                # Negative literal NOT X
+                targets = range(self.N_feature) if threshold < 0 else self.n_trainable_literals
+                for i in targets:
+                    if self.n_automata[i].state > 1 and random.random() <= s1:
+                        feedback_count += 1
+                        if self.n_automata[i].penalty() and i in self.n_included_literals:
+                            self.n_included_literals.remove(i)
+                            if logger is not None:
+                                logger.debug(f"Type I Feedback, Erase Pattern: Negative literal for feature {i} removed from included literals.")
 
             # Recognize Pattern
             # Increase the number of included literals
             if clause_output == 1:
-                if threshold < 0:
-                    for i in range(self.N_feature):
-                        # Positive literal X
-                        if X[i] == 1:
-                            if self.p_automata[i].state < self.N_states and random.random() <= s2:
-                                feedback_count += 1
-                                if self.p_automata[i].reward():
-                                    self.p_included_literals.append(i)
-                                    if logger is not None:
-                                        logger.debug(f"Type I Feedback, Recognize Pattern: Positive literal for feature {i} added to included literals.")
+                # Positive literal X
+                targets = range(self.N_feature) if threshold < 0 else self.p_trainable_literals
+                for i in targets:
+                    if X[i] == 1 and self.p_automata[i].state < self.N_states and random.random() <= s2:
+                        feedback_count += 1
+                        if self.p_automata[i].reward():
+                            self.p_included_literals.append(i)
+                            if logger is not None:
+                                logger.debug(f"Type I Feedback, Recognize Pattern: Positive literal for feature {i} added to included literals.")
 
-                            if self.n_automata[i].state > 1 and random.random() <= s1:
-                                feedback_count += 1
-                                if self.n_automata[i].penalty() and i in self.n_included_literals:
-                                    self.n_included_literals.remove(i)
-                                    if logger is not None:
-                                        logger.debug(f"Type I Feedback, Recognize Pattern: Negative literal for feature {i} removed from included literals.")
+                    elif X[i] == 0 and self.p_automata[i].state > 1 and random.random() <= s1:
+                        feedback_count += 1
+                        if self.p_automata[i].penalty() and i in self.p_included_literals:
+                            self.p_included_literals.remove(i)
+                            if logger is not None:
+                                logger.debug(f"Type I Feedback, Recognize Pattern: Positive literal for feature {i} removed from included literals.")
 
-                        # Negative literal NOT X
-                        elif X[i] == 0:
-                            if self.n_automata[i].state < self.N_states and random.random() <= s2:
-                                feedback_count += 1
-                                if self.n_automata[i].reward():
-                                    self.n_included_literals.append(i)
-                                    if logger is not None:
-                                        logger.debug(f"Type I Feedback, Recognize Pattern: Negative literal for feature {i} added to included literals.")
-
-                            if self.p_automata[i].state > 1 and random.random() <= s1:
-                                feedback_count += 1
-                                if self.p_automata[i].penalty() and i in self.p_included_literals:
-                                    self.p_included_literals.remove(i)
-                                    if logger is not None:
-                                        logger.debug(f"Type I Feedback, Recognize Pattern: Positive literal for feature {i} removed from included literals.")
-                else:
-                    for i in self.p_trainable_literals:
-                        # Positive literal X
-                        if X[i] == 1:
-                            if self.p_automata[i].state < self.N_states and random.random() <= s2:
-                                feedback_count += 1
-                                if self.p_automata[i].reward():
-                                    self.p_included_literals.append(i)
-                                    if logger is not None:
-                                        logger.debug(f"Type I Feedback, Recognize Pattern: Positive literal for feature {i} added to included literals.")
-
-                        # Negative literal NOT X
-                        elif X[i] == 0:
-                            if self.p_automata[i].state > 1 and random.random() <= s1:
-                                feedback_count += 1
-                                if self.p_automata[i].penalty() and i in self.p_included_literals:
-                                    self.p_included_literals.remove(i)
-                                    if logger is not None:
-                                        logger.debug(f"Type I Feedback, Recognize Pattern: Positive literal for feature {i} removed from included literals.")
-
-                    for i in self.n_trainable_literals:
-                        # Positive literal X
-                        if X[i] == 1:
-                            if self.n_automata[i].state > 1 and random.random() <= s1:
-                                feedback_count += 1
-                                if self.n_automata[i].penalty() and i in self.n_included_literals:
-                                    self.n_included_literals.remove(i)
-                                    if logger is not None:
-                                        logger.debug(f"Type I Feedback, Recognize Pattern: Negative literal for feature {i} removed from included literals.")
-
-                        # Negative literal NOT X
-                        elif X[i] == 0:
-                            if self.n_automata[i].state < self.N_states and random.random() <= s2:
-                                feedback_count += 1
-                                if self.n_automata[i].reward():
-                                    self.n_included_literals.append(i)
-                                    if logger is not None:
-                                        logger.debug(f"Type I Feedback, Recognize Pattern: Negative literal for feature {i} added to included literals.")
-
+                # Negative literal NOT X
+                targets = range(self.N_feature) if threshold < 0 else self.n_trainable_literals
+                for i in targets:
+                    if X[i] == 1 and self.n_automata[i].state > 1 and random.random() <= s1:
+                        feedback_count += 1
+                        if self.n_automata[i].penalty() and i in self.n_included_literals:
+                            self.n_included_literals.remove(i)
+                            if logger is not None:
+                                logger.debug(f"Type I Feedback, Recognize Pattern: Negative literal for feature {i} removed from included literals.")
+ 
+                    elif X[i] == 0 and self.n_automata[i].state < self.N_states and random.random() <= s2:
+                        feedback_count += 1
+                        if self.n_automata[i].reward():
+                            self.n_included_literals.append(i)
+                            if logger is not None:
+                                logger.debug(f"Type I Feedback, Recognize Pattern: Negative literal for feature {i} added to included literals.")
 
         # Type II Feedback (Reject Patterns)
         else:
             # Want clause_output to be 0
             if (clause_output == 1):
-                if threshold < 0:
-                    for i in range(self.N_feature):
-                        # TODO
-                        # My implementation: Easier to overfit
-                        # if (self.p_automata[i].action == 0) and (X[i] == 0): 
-                        #         self.p_automata[i].reward()
-                        #         self.n_automata[i].reward()
-                        # elif (self.n_automata[i].action == 0) and (X[i] == 1):
-                        #         self.p_automata[i].reward()
-                        #         self.n_automata[i].reward()
-                        # Original paper implementation
-                        if (X[i] == 0) and (self.p_automata[i].action == 0): 
-                            feedback_count += 1
-                            if self.p_automata[i].reward():
-                                self.p_included_literals.append(i)
-                                if logger is not None:
-                                    logger.debug(f"Type II Feedback: Positive literal for feature {i} added to included literals.")
-                        elif (X[i] == 1) and (self.n_automata[i].action == 0):
-                            feedback_count += 1
-                            if self.n_automata[i].reward():
-                                self.n_included_literals.append(i)
-                                if logger is not None:
-                                    logger.debug(f"Type II Feedback: Negative literal for feature {i} added to included literals.")
-                else:
-                    for i in self.p_trainable_literals:
-                        if (X[i] == 0) and (self.p_automata[i].action == 0): 
-                            feedback_count += 1
-                            if self.p_automata[i].reward():
-                                self.p_included_literals.append(i)
-                                if logger is not None:
-                                    logger.debug(f"Type II Feedback: Positive literal for feature {i} added to included literals.")
-                    for i in self.n_trainable_literals:
-                        if (X[i] == 1) and (self.n_automata[i].action == 0):
-                            feedback_count += 1
-                            if self.n_automata[i].reward():
-                                self.n_included_literals.append(i)
-                                if logger is not None:
-                                    logger.debug(f"Type II Feedback: Negative literal for feature {i} added to included literals.")
+                targets = range(self.N_feature) if threshold < 0 else self.p_trainable_literals
+                for i in targets:
+                    if (X[i] == 0) and (self.p_automata[i].action == 0): 
+                        feedback_count += 1
+                        if self.p_automata[i].reward():
+                            self.p_included_literals.append(i)
+                            if logger is not None:
+                                logger.debug(f"Type II Feedback: Positive literal for feature {i} added to included literals.")
+
+                targets = range(self.N_feature) if threshold < 0 else self.n_trainable_literals
+                for i in targets:
+                    if (X[i] == 1) and (self.n_automata[i].action == 0):
+                        feedback_count += 1
+                        if self.n_automata[i].reward():
+                            self.n_included_literals.append(i)
+                            if logger is not None:
+                                logger.debug(f"Type II Feedback: Negative literal for feature {i} added to included literals.")
 
         return feedback_count
 
