@@ -56,9 +56,9 @@ class Clause:
             self.p_trainable_literals = []
             self.n_trainable_literals = []
             for i in range(self.N_feature):
-                if abs(self.p_automata[i].state - self.N_states // 2) <= threshold:
+                if abs(self.p_automata[i].state - self.N_states // 2 - 0.5) <= threshold:
                     self.p_trainable_literals.append(i)
-                if abs(self.n_automata[i].state - self.N_states // 2) <= threshold:
+                if abs(self.n_automata[i].state - self.N_states // 2 - 0.5) <= threshold:
                     self.n_trainable_literals.append(i)
 
     def evaluate(self, X):
