@@ -62,12 +62,12 @@ def main(args):
 
 def default_args(**kwargs):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--num_clauses", default=200, type=int)
-    parser.add_argument("--T", default=100, type=int)
+    parser.add_argument("--num_clauses", default=100, type=int)
+    parser.add_argument("--T", default=10, type=int)
     parser.add_argument("--s", default=5.0, type=float)
     parser.add_argument("--max_included_literals", default=None, type=int)
     parser.add_argument("--weighted_clauses", default=False, type=bool)
-    parser.add_argument("--epochs", default=5, type=int)
+    parser.add_argument("--epochs", default=10, type=int)
     parser.add_argument("--train", default=-1, type=int)
     parser.add_argument("--test", default=-1, type=int)
     args = parser.parse_args()

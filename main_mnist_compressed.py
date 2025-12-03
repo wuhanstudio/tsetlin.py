@@ -33,11 +33,11 @@ y_test = mnist.test_labels()
 X_test[X_test <= 75] = 0
 X_test[X_test > 75] = 1
 
-# indices = balance_dataset(X_train, y_train, num_per_class=10)
+# indices = balance_dataset(X_train, y_train, num_per_class=600)
 # X_train = X_train[indices]
 # y_train = y_train[indices]
 
-# indices = balance_dataset(X_test, y_test, num_per_class=2)
+# indices = balance_dataset(X_test, y_test, num_per_class=100)
 # X_test = X_test[indices]
 # y_test = y_test[indices]
 
@@ -88,9 +88,9 @@ def plot_histogram(tsetlin):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tsetlin Machine on Iris Dataset")
-    parser.add_argument("--epochs", type=int, default=5, help="Number of training epochs")
+    parser.add_argument("--epochs", type=int, default=10, help="Number of training epochs")
 
-    parser.add_argument("--T", type=int, default=100, help="Threshold T")
+    parser.add_argument("--T", type=int, default=10, help="Threshold T")
     parser.add_argument("--s", type=float, default=5.0, help="Specificity s")
     parser.add_argument("--threshold", type=float, default=-1, help="Threshold for compressed TM")
 

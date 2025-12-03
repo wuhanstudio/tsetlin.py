@@ -25,11 +25,11 @@ y_test = mnist.test_labels()
 X_test[X_test <= 75] = 0
 X_test[X_test > 75] = 1
 
-indices = balance_dataset(X_train, y_train, num_per_class=100)
+indices = balance_dataset(X_train, y_train, num_per_class=600)
 X_train = X_train[indices]
 y_train = y_train[indices]
 
-indices = balance_dataset(X_test, y_test, num_per_class=20)
+indices = balance_dataset(X_test, y_test, num_per_class=100)
 X_test = X_test[indices]
 y_test = y_test[indices]
 
@@ -95,16 +95,17 @@ def plot_histogram(tsetlin):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tsetlin Machine on Iris Dataset")
-    parser.add_argument("--epochs", type=int, default=5, help="Number of training epochs")
+    parser.add_argument("--epochs", type=int, default=10, help="Number of training epochs")
 
-    parser.add_argument("--n_clause", type=int, default=200, help="Number of clauses")
-    parser.add_argument("--n_state", type=int, default=100, help="Number of states")
+    parser.add_argument("--n_clause", type=int, default=100, help="Number of clauses")
+    parser.add_argument("--n_state", type=int, default=50, help="Number of states")
     
-    parser.add_argument("--T", type=int, default=100, help="Threshold T")
+    parser.add_argument("--T", type=int, default=10, help="Threshold T")
     parser.add_argument("--s", type=float, default=5.0, help="Specificity s")
 
     parser.add_argument("--feedback", action='store_true')
     parser.add_argument("--compression", action='store_true')
+    parser.add_argument("--optuna", action='store_true')
 
     args = parser.parse_args()
 
@@ -127,94 +128,133 @@ if __name__ == "__main__":
     X_train = [bitarray(list(map(bool, x))) for x in X_train]
     X_test = [bitarray(list(map(bool, x))) for x in X_test]
 
-    tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=10, N_clause=N_CLAUSE, N_state=N_STATE)
+    if args.optuna:
+        import optuna
 
-    y_pred = tsetlin.predict(X_train)
-    accuracy = sum(y_pred == y_train) / len(y_train)
+        def objective(trial):
+            # n_state = trial.suggest_int("n_state", 2, 100, step=2)
+            # n_clause = trial.suggest_int("n_clause", 2, 100, step=2)
 
-    # plot_histogram(tsetlin)
+            T = trial.suggest_int("T", 1, 50)
+            s = trial.suggest_float("s", 1.0, 10.0, step=0.1)
 
-    target_type_1_count_list = []
-    target_type_2_count_list = []
-    non_target_type_1_count_list = []
-    non_target_type_2_count_list = []
+            tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=10, N_clause=100, N_state=100)
 
-    for epoch in range(N_EPOCHS):
-        log(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
-        target_type_1_count = 0
-        target_type_2_count = 0
-        non_target_type_1_count = 0
-        non_target_type_2_count = 0
-        for i in m_tqdm(range(len(X_train))):
-            feedback = tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s, return_feedback=args.feedback)
-            if args.feedback:
-                target_type_1_count += feedback['target']['type-1']
-                target_type_2_count += feedback['target']['type-2']
-                non_target_type_1_count += feedback['non-target']['type-1']
-                non_target_type_2_count += feedback['non-target']['type-2']
-        if args.feedback:
-            target_type_1_rel_change = 0.0
-            target_type_2_rel_change = 0.0
-            if len(target_type_1_count_list) > 0:
-                target_type_1_rel_change = abs((target_type_1_count - target_type_1_count_list[-1]) / target_type_1_count_list[-1] * 100)
-                target_type_2_rel_change = abs((target_type_2_count - target_type_2_count_list[-1]) / target_type_2_count_list[-1] * 100)
-            non_target_type_1_rel_change = 0.0
-            non_target_type_2_rel_change = 0.0
-            if len(non_target_type_1_count_list) > 0:
-                non_target_type_1_rel_change = abs((non_target_type_1_count - non_target_type_1_count_list[-1]) / non_target_type_1_count_list[-1] * 100)
-                non_target_type_2_rel_change = abs((non_target_type_2_count - non_target_type_2_count_list[-1]) / non_target_type_2_count_list[-1] * 100)
-            log(f"Target Type I Feedbacks: {target_type_1_count}, Tolerance {target_type_1_rel_change:.2f}%, Target Type II Feedbacks: {target_type_2_count}, Tolerance {target_type_2_rel_change:.2f}%")
-            log(f"Non-Target Type I Feedbacks: {non_target_type_1_count}, Tolerance {non_target_type_1_rel_change:.2f}%, Non-Target Type II Feedbacks: {non_target_type_2_count}, Tolerance {non_target_type_2_rel_change:.2f}% ")
+            y_pred = tsetlin.predict(X_test)
+            accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(y_pred, y_test)]) / len(y_test)
+
+            for epoch in range(N_EPOCHS):
+                for i in m_tqdm(range(len(X_train)), desc=f"Trial Epoch {epoch+1}/{N_EPOCHS}, accuracy: {accuracy*100:.2f}%"):
+                    tsetlin.step(X_train[i], y_train[i], T=T, s=s)
+                y_pred = tsetlin.predict(X_test)
+                accuracy = sum([ 1 if pred == test else 0 for pred, test in zip(y_pred, y_test)]) / len(y_test)
+
+            return (1.0 - accuracy)
+
+        # Create a new study.
+        # study = optuna.create_study()
+
+        study = optuna.create_study(
+            storage="sqlite:///db.sqlite3",  # Specify the storage URL here.
+            study_name="tsetlin-machine-redd",
+            load_if_exists="True"
+        )
+        
+        # Invoke optimization of the objective function.
+        study.optimize(objective, n_trials=100)  
+
+        print(f"Best value: {study.best_value} (params: {study.best_params})")
+    else:
+        log(f"Using {N_CLAUSE} clauses and {N_STATE} states")
+
+        tsetlin = Tsetlin(N_feature=len(X_train[0]), N_class=10, N_clause=N_CLAUSE, N_state=N_STATE)
+
         y_pred = tsetlin.predict(X_train)
         accuracy = sum(y_pred == y_train) / len(y_train)
 
-        if args.compression:
-            if ask_compression():
-                break
-
         # plot_histogram(tsetlin)
 
+        target_type_1_count_list = []
+        target_type_2_count_list = []
+        non_target_type_1_count_list = []
+        non_target_type_2_count_list = []
+
+        for epoch in range(N_EPOCHS):
+            log(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
+            target_type_1_count = 0
+            target_type_2_count = 0
+            non_target_type_1_count = 0
+            non_target_type_2_count = 0
+            for i in m_tqdm(range(len(X_train))):
+                feedback = tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s, return_feedback=args.feedback)
+                if args.feedback:
+                    target_type_1_count += feedback['target']['type-1']
+                    target_type_2_count += feedback['target']['type-2']
+                    non_target_type_1_count += feedback['non-target']['type-1']
+                    non_target_type_2_count += feedback['non-target']['type-2']
+            if args.feedback:
+                target_type_1_rel_change = 0.0
+                target_type_2_rel_change = 0.0
+                if len(target_type_1_count_list) > 0:
+                    target_type_1_rel_change = abs((target_type_1_count - target_type_1_count_list[-1]) / target_type_1_count_list[-1] * 100)
+                    target_type_2_rel_change = abs((target_type_2_count - target_type_2_count_list[-1]) / target_type_2_count_list[-1] * 100)
+                non_target_type_1_rel_change = 0.0
+                non_target_type_2_rel_change = 0.0
+                if len(non_target_type_1_count_list) > 0:
+                    non_target_type_1_rel_change = abs((non_target_type_1_count - non_target_type_1_count_list[-1]) / non_target_type_1_count_list[-1] * 100)
+                    non_target_type_2_rel_change = abs((non_target_type_2_count - non_target_type_2_count_list[-1]) / non_target_type_2_count_list[-1] * 100)
+                log(f"Target Type I Feedbacks: {target_type_1_count}, Tolerance {target_type_1_rel_change:.2f}%, Target Type II Feedbacks: {target_type_2_count}, Tolerance {target_type_2_rel_change:.2f}%")
+                log(f"Non-Target Type I Feedbacks: {non_target_type_1_count}, Tolerance {non_target_type_1_rel_change:.2f}%, Non-Target Type II Feedbacks: {non_target_type_2_count}, Tolerance {non_target_type_2_rel_change:.2f}% ")
+            y_pred = tsetlin.predict(X_train)
+            accuracy = sum(y_pred == y_train) / len(y_train)
+
+            if args.compression:
+                if ask_compression():
+                    break
+
+            # plot_histogram(tsetlin)
+
+            if args.feedback:
+                target_type_1_count_list.append(target_type_1_count)
+                target_type_2_count_list.append(target_type_2_count)
+                non_target_type_1_count_list.append(non_target_type_1_count)
+                non_target_type_2_count_list.append(non_target_type_2_count)
+        
         if args.feedback:
-            target_type_1_count_list.append(target_type_1_count)
-            target_type_2_count_list.append(target_type_2_count)
-            non_target_type_1_count_list.append(non_target_type_1_count)
-            non_target_type_2_count_list.append(non_target_type_2_count)
-    
-    if args.feedback:
-        import matplotlib.pyplot as plt
-        epochs = list(range(1, len(target_type_1_count_list) + 1))
-        plt.plot(epochs, target_type_1_count_list, label='Target Type I')
-        plt.plot(epochs, target_type_2_count_list, label='Target Type II')
-        plt.plot(epochs, non_target_type_1_count_list, label='Non-Target Type I')
-        plt.plot(epochs, non_target_type_2_count_list, label='Non-Target Type II')
-        plt.xlabel('Epoch')
-        plt.ylabel('Feedback Count')
-        plt.title('Feedback Counts per Epoch')
-        plt.legend()
-        plt.show()
+            import matplotlib.pyplot as plt
+            epochs = list(range(1, len(target_type_1_count_list) + 1))
+            plt.plot(epochs, target_type_1_count_list, label='Target Type I')
+            plt.plot(epochs, target_type_2_count_list, label='Target Type II')
+            plt.plot(epochs, non_target_type_1_count_list, label='Non-Target Type I')
+            plt.plot(epochs, non_target_type_2_count_list, label='Non-Target Type II')
+            plt.xlabel('Epoch')
+            plt.ylabel('Feedback Count')
+            plt.title('Feedback Counts per Epoch')
+            plt.legend()
+            plt.show()
 
-    # tsetlin.fit(X_train, y_train, T=15, s=3, epochs=EPOCHS)
+        # tsetlin.fit(X_train, y_train, T=15, s=3, epochs=EPOCHS)
 
-    log("")
+        log("")
 
-    # Final evaluation
-    y_pred = tsetlin.predict(X_test)
-    accuracy = sum(y_pred == y_test) / len(y_test)
+        # Final evaluation
+        y_pred = tsetlin.predict(X_test)
+        accuracy = sum(y_pred == y_test) / len(y_test)
 
-    log(f"Test Accuracy: {accuracy * 100:.2f}%")
+        log(f"Test Accuracy: {accuracy * 100:.2f}%")
 
-    # Save the model
-    tsetlin.save_model("tsetlin_model.pb", type="training")
-    log("Model saved to tsetlin_model.pb")
+        # Save the model
+        tsetlin.save_model("tsetlin_model.pb", type="training")
+        log("Model saved to tsetlin_model.pb")
 
-    log("")
+        log("")
 
-    # Load the model
-    n_tsetlin = Tsetlin.load_model("tsetlin_model.pb")
-    log("Model loaded from tsetlin_model.pb")
+        # Load the model
+        n_tsetlin = Tsetlin.load_model("tsetlin_model.pb")
+        log("Model loaded from tsetlin_model.pb")
 
-    # Evaluate the loaded model
-    n_y_pred = n_tsetlin.predict(X_test)
-    accuracy = sum(n_y_pred == y_test) / len(y_test)
+        # Evaluate the loaded model
+        n_y_pred = n_tsetlin.predict(X_test)
+        accuracy = sum(n_y_pred == y_test) / len(y_test)
 
-    log(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
+        log(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
