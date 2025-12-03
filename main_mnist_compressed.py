@@ -1,19 +1,21 @@
 import random
 random.seed(100)
 
-import argparse
-
-from bitarray import bitarray
-
-import mnist
-from tsetlin import Tsetlin
+import fastrand
+fastrand.pcg32_seed(100)
 
 import sys
+import argparse
+
+import mnist
+from bitarray import bitarray
+
 from loguru import logger
 logger.remove()
 logger.add("train.log", level="DEBUG", colorize=False, backtrace=True, diagnose=True)
 logger.add(sys.stdout, level="INFO")
 
+from tsetlin import Tsetlin
 from tsetlin.utils.tqdm import m_tqdm
 from tsetlin.utils.dataset import balance_dataset
 

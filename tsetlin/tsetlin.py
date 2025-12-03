@@ -23,7 +23,7 @@ class Tsetlin:
             self.pos_clauses.append([Clause(N_feature, N_state=N_state) for _ in range(int(N_clause / 2))])
             self.neg_clauses.append([Clause(N_feature, N_state=N_state) for _ in range(int(N_clause / 2))])
 
-    def predict(self, X, return_votes=False, n_jobs=8):
+    def predict(self, X, return_votes=False):
         y_pred = [0] * len(X)
         n_half = int(self.n_clauses / 2)
 
@@ -70,16 +70,17 @@ class Tsetlin:
 
         # Update clauses for the target class
         for i in range(int(self.n_clauses / 2)):
+            # Positive Clause: Type I Feedback
             if (random.random() <= c1):
-                # Positive Clause: Type I Feedback
-                feedback_count = self.pos_clauses[y_target][i].update(X, 1, pos_clauses[i], s=s, threshold=threshold, logger=logger)
+                feedback_count = self.pos_clauses[y_target][i].type_I_feedback(X, pos_clauses[i], s=s, threshold=threshold, logger=logger)
                 if return_feedback:
                     feedback['target']['type-1'] += feedback_count
                 if logger is not None:
                     logger.debug(f"Clause updated for target class {y_target}, clause {i}, Type I feedback count {feedback_count}")
-            if (random.random() <= c1):
-                # Negative Clause: Type II Feedback
-                feedback_count = self.neg_clauses[y_target][i].update(X, 0, neg_clauses[i], s=s, threshold=threshold, logger=logger)
+
+            # Negative Clause: Type II Feedback
+            if neg_clauses[i] == 1 and (random.random() <= c1):
+                feedback_count = self.neg_clauses[y_target][i].type_II_feedback(X, threshold=threshold, logger=logger)
                 if return_feedback:
                     feedback['target']['type-2'] += feedback_count
                 if logger is not None:
@@ -103,16 +104,17 @@ class Tsetlin:
         # Calculate probabilities
         c2 = (T + class_sum) / (2 * T)
         for i in range(int(self.n_clauses / 2)):
-            if (random.random() <= c2):
-                # Positive Clause: Type II Feedback
-                feedback_count = self.pos_clauses[other_class][i].update(X, 0, pos_clauses[i], s=s, threshold=threshold, logger=logger)
+            # Positive Clause: Type II Feedback
+            if pos_clauses[i] == 1 and (random.random() <= c2):
+                feedback_count = self.pos_clauses[other_class][i].type_II_feedback(X, threshold=threshold, logger=logger)
                 if return_feedback:
                     feedback['non-target']['type-2'] += feedback_count
                 if logger is not None:
                     logger.debug(f"Clause updated for non-target class {other_class}, clause {i}, Type II feedback count {feedback_count}")
+
+            # Negative Clause: Type I Feedback
             if (random.random() <= c2):
-                # Negative Clause: Type I Feedback
-                feedback_count = self.neg_clauses[other_class][i].update(X, 1, neg_clauses[i], s=s, threshold=threshold, logger=logger)
+                feedback_count = self.neg_clauses[other_class][i].type_I_feedback(X, neg_clauses[i], s=s, threshold=threshold, logger=logger)
                 if return_feedback:
                     feedback['non-target']['type-1'] += feedback_count
                 if logger is not None:
