@@ -12,20 +12,18 @@ class Automaton:
         return 1 if (self.state > (self.middle_state)) else 0
 
     def reward(self):
-        previous_action = self.action
         self.state += 1
         self.action = self._action()
 
         # A new include literal
-        return previous_action != self.action
+        return self.state == (self.middle_state + 1)
 
     def penalty(self):
-        previous_action = self.action
         self.state -= 1
         self.action = self._action()
 
         # A new exclude literal
-        return previous_action != self.action
+        return self.state == (self.middle_state)
 
     def update(self):
         self.action = self._action()
