@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+
+message Trace {
+    enum Type {
+        TYPE_I = 0;
+        TYPE_II = 1;
+    };
+
+    enum Pattern {
+        RECOGNIZE = 0;
+        FORGET = 1;
+        NA = 2;
+    };
+
+    enum Action {
+        REWARD = 0;
+        PENALTY = 1;
+    };
+
+    Type type = 1;
+    Pattern pattern = 2;
+    Action action = 3;
+    bool transition = 4;
+    uint32 state = 5;
+};
+
+message Traces {
+    repeated Trace trace = 1;
+};
