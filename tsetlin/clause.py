@@ -4,9 +4,11 @@ import random
 
 rand = None
 if sys.implementation.name != 'micropython':
-    from bitarray import bitarray
     import fastrand
     rand = fastrand.pcg32_uniform
+
+    from bitarray import bitarray
+    from trace_pb2 import Trace
 else:
     rand = random.random
 
@@ -79,7 +81,7 @@ class Clause:
                     return 0
         return 1
 
-    def type_I_feedback(self, X, clause_output, s, threshold=-1, logger=None):
+    def type_I_feedback(self, X, clause_output, s, threshold=-1, trace=None):
         feedback_count = 0
 
         # Want clause_output to be 1
@@ -94,26 +96,45 @@ class Clause:
             for i in targets:
                 if self.p_automata[i].state > 1 and rand() <= s1:
                     feedback_count += 1
+                    transition = False
                     if self.p_automata[i].penalty():
+                        transition = True
                         if not self.is_micro:
                             self.p_included_mask[i] = 0
                         elif i in self.p_included_literals:
                             self.p_included_literals.remove(i)
-                        if logger is not None:
-                            logger.debug(f"Type I Feedback, Erase Pattern: Positive literal for feature {i} removed from included literals.")
+
+                    if trace is not None:
+                        t = Trace()
+                        t.type = Trace.Type.TYPE_I
+                        t.pattern = Trace.Pattern.FORGET
+                        t.action = Trace.Action.PENALTY
+                        t.transition = transition
+                        t.state = self.p_automata[i].state
+                        trace.trace.append(t)
 
             # Negative literal NOT X
             targets = range(self.N_feature) if threshold < 0 else self.n_trainable_literals
             for i in targets:
                 if self.n_automata[i].state > 1 and rand() <= s1:
                     feedback_count += 1
+                    transition = False
                     if self.n_automata[i].penalty():
+                        transition = True
                         if not self.is_micro:
                             self.n_included_mask[i] = 0
                         elif i in self.n_included_literals:
                             self.n_included_literals.remove(i)
-                        if logger is not None:
-                            logger.debug(f"Type I Feedback, Erase Pattern: Negative literal for feature {i} removed from included literals.")
+
+                    if trace is not None:
+                        t = Trace()
+                        t.type = Trace.Type.TYPE_I
+                        t.pattern = Trace.Pattern.FORGET
+                        t.action = Trace.Action.PENALTY
+                        t.transition = transition
+                        t.state = self.n_automata[i].state
+                        trace.trace.append(t)
+
 
         # Recognize Pattern
         # Increase the number of included literals
@@ -123,75 +144,129 @@ class Clause:
             for i in targets:
                 if X[i] == 1 and self.p_automata[i].state < self.N_states and rand() <= s2:
                     feedback_count += 1
+                    transition = False
                     if self.p_automata[i].reward():
+                        transition = True
                         if not self.is_micro:
                             self.p_included_mask[i] = 1
                         else:
                             self.p_included_literals.append(i)
-                        if logger is not None:
-                            logger.debug(f"Type I Feedback, Recognize Pattern: Positive literal for feature {i} added to included literals.")
+
+                    if trace is not None:
+                        t = Trace()
+                        t.type = Trace.Type.TYPE_I
+                        t.pattern = Trace.Pattern.RECOGNIZE
+                        t.action = Trace.Action.REWARD
+                        t.transition = transition
+                        t.state = self.p_automata[i].state
+                        trace.trace.append(t)
 
                 elif X[i] == 0 and self.p_automata[i].state > 1 and rand() <= s1:
                     feedback_count += 1
+                    transition = False
                     if self.p_automata[i].penalty():
+                        transition = True
                         if not self.is_micro:
                             self.p_included_mask[i] = 0
                         elif i in self.p_included_literals:
                             self.p_included_literals.remove(i)
-                        if logger is not None:
-                            logger.debug(f"Type I Feedback, Recognize Pattern: Positive literal for feature {i} removed from included literals.")
+
+                    if trace is not None:
+                        t = Trace()
+                        t.type = Trace.Type.TYPE_I
+                        t.pattern = Trace.Pattern.RECOGNIZE
+                        t.action = Trace.Action.PENALTY
+                        t.transition = transition
+                        t.state = self.p_automata[i].state
+                        trace.trace.append(t)
 
             # Negative literal NOT X
             targets = range(self.N_feature) if threshold < 0 else self.n_trainable_literals
             for i in targets:
                 if X[i] == 1 and self.n_automata[i].state > 1 and rand() <= s1:
                     feedback_count += 1
+                    transition = False
                     if self.n_automata[i].penalty():
+                        transition = True
                         if not self.is_micro:
                             self.n_included_mask[i] = 0
                         elif i in self.n_included_literals:
                             self.n_included_literals.remove(i)
-                        if logger is not None:
-                            logger.debug(f"Type I Feedback, Recognize Pattern: Negative literal for feature {i} removed from included literals.")
+
+                    if trace is not None:
+                        t = Trace()
+                        t.type = Trace.Type.TYPE_I
+                        t.pattern = Trace.Pattern.RECOGNIZE
+                        t.action = Trace.Action.PENALTY
+                        t.transition = transition
+                        t.state = self.n_automata[i].state
+                        trace.trace.append(t)
 
                 elif X[i] == 0 and self.n_automata[i].state < self.N_states and rand() <= s2:
                     feedback_count += 1
+                    transition = False
                     if self.n_automata[i].reward():
+                        transition = True
                         if not self.is_micro:
                             self.n_included_mask[i] = 1
                         elif i in self.n_included_literals:
                             self.n_included_literals.append(i)
-                        if logger is not None:
-                            logger.debug(f"Type I Feedback, Recognize Pattern: Negative literal for feature {i} added to included literals.")
+
+                    if trace is not None:
+                        t = Trace()
+                        t.type = Trace.Type.TYPE_I
+                        t.pattern = Trace.Pattern.RECOGNIZE
+                        t.action = Trace.Action.REWARD
+                        t.transition = transition
+                        t.state = self.n_automata[i].state
+                        trace.trace.append(t)
 
         return feedback_count
 
-    def type_II_feedback(self, X, threshold=-1, logger=None):
+    def type_II_feedback(self, X, threshold=-1, trace=None):
         feedback_count = 0
         # Want clause_output to be 0
         targets = range(self.N_feature) if threshold < 0 else self.p_trainable_literals
         for i in targets:
             if (X[i] == 0) and (self.p_included_mask[i] == 0): 
                 feedback_count += 1
+                transition = False
                 if self.p_automata[i].reward():
+                    transition = True
                     if not self.is_micro:
                         self.p_included_mask[i] = 1
                     else:
                         self.p_included_literals.append(i)
-                    if logger is not None:
-                        logger.debug(f"Type II Feedback: Positive literal for feature {i} added to included literals.")
+
+                if trace is not None:
+                    t = Trace()
+                    t.type = Trace.Type.TYPE_II
+                    t.pattern = Trace.Pattern.NA
+                    t.action = Trace.Action.REWARD
+                    t.transition = transition
+                    t.state = self.p_automata[i].state
+                    trace.trace.append(t)
 
         targets = range(self.N_feature) if threshold < 0 else self.n_trainable_literals
         for i in targets:
             if (X[i] == 1) and (self.n_included_mask[i] == 0):
                 feedback_count += 1
+                transition = False
                 if self.n_automata[i].reward():
+                    transition = True
                     if not self.is_micro:
                         self.n_included_mask[i] = 1
                     else:
                         self.n_included_literals.append(i)
-                    if logger is not None:
-                        logger.debug(f"Type II Feedback: Negative literal for feature {i} added to included literals.")
+
+                if trace is not None:
+                    t = Trace()
+                    t.type = Trace.Type.TYPE_II
+                    t.pattern = Trace.Pattern.NA
+                    t.action = Trace.Action.REWARD
+                    t.transition = transition
+                    t.state = self.n_automata[i].state
+                    trace.trace.append(t)
 
         return feedback_count
 

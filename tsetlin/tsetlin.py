@@ -48,7 +48,7 @@ class Tsetlin:
         else:
             return y_pred
 
-    def step(self, X, y_target, T, s, return_feedback=False, threshold=-1, logger=None):
+    def step(self, X, y_target, T, s, return_feedback=False, threshold=-1, logger=None, trace=None):
         # Pair-wise learning
         feedback = {'target': {'type-1': 0, 'type-2': 0}, 'non-target': {'type-1': 0, 'type-2': 0}}
 
@@ -72,7 +72,7 @@ class Tsetlin:
         for i in range(int(self.n_clauses / 2)):
             # Positive Clause: Type I Feedback
             if (random.random() <= c1):
-                feedback_count = self.pos_clauses[y_target][i].type_I_feedback(X, pos_clauses[i], s=s, threshold=threshold, logger=logger)
+                feedback_count = self.pos_clauses[y_target][i].type_I_feedback(X, pos_clauses[i], s=s, threshold=threshold, trace=trace)
                 if return_feedback:
                     feedback['target']['type-1'] += feedback_count
                 if logger is not None:
@@ -80,7 +80,7 @@ class Tsetlin:
 
             # Negative Clause: Type II Feedback
             if neg_clauses[i] == 1 and (random.random() <= c1):
-                feedback_count = self.neg_clauses[y_target][i].type_II_feedback(X, threshold=threshold, logger=logger)
+                feedback_count = self.neg_clauses[y_target][i].type_II_feedback(X, threshold=threshold, trace=trace)
                 if return_feedback:
                     feedback['target']['type-2'] += feedback_count
                 if logger is not None:
@@ -106,7 +106,7 @@ class Tsetlin:
         for i in range(int(self.n_clauses / 2)):
             # Positive Clause: Type II Feedback
             if pos_clauses[i] == 1 and (random.random() <= c2):
-                feedback_count = self.pos_clauses[other_class][i].type_II_feedback(X, threshold=threshold, logger=logger)
+                feedback_count = self.pos_clauses[other_class][i].type_II_feedback(X, threshold=threshold, trace=trace)
                 if return_feedback:
                     feedback['non-target']['type-2'] += feedback_count
                 if logger is not None:
@@ -114,7 +114,7 @@ class Tsetlin:
 
             # Negative Clause: Type I Feedback
             if (random.random() <= c2):
-                feedback_count = self.neg_clauses[other_class][i].type_I_feedback(X, neg_clauses[i], s=s, threshold=threshold, logger=logger)
+                feedback_count = self.neg_clauses[other_class][i].type_I_feedback(X, neg_clauses[i], s=s, threshold=threshold, trace=trace)
                 if return_feedback:
                     feedback['non-target']['type-1'] += feedback_count
                 if logger is not None:

@@ -11,6 +11,8 @@ from tsetlin.utils.log import log
 from tsetlin.utils.tqdm import m_tqdm
 from tsetlin.utils.dataset import balance_dataset
 
+from trace_pb2 import Traces
+
 mnist.datasets_url = "https://ossci-datasets.s3.amazonaws.com/mnist/"
 
 X_train = mnist.train_images()
@@ -25,13 +27,13 @@ y_test = mnist.test_labels()
 X_test[X_test <= 75] = 0
 X_test[X_test > 75] = 1
 
-indices = balance_dataset(X_train, y_train, num_per_class=600)
-X_train = X_train[indices]
-y_train = y_train[indices]
+# indices = balance_dataset(X_train, y_train, num_per_class=600)
+# X_train = X_train[indices]
+# y_train = y_train[indices]
 
-indices = balance_dataset(X_test, y_test, num_per_class=100)
-X_test = X_test[indices]
-y_test = y_test[indices]
+# indices = balance_dataset(X_test, y_test, num_per_class=100)
+# X_test = X_test[indices]
+# y_test = y_test[indices]
 
 log(f"Train images shape: {X_train.shape}, Train labels shape: {y_train.shape}")
 log(f"Test images shape: {X_test.shape}, Test labels shape: {y_test.shape}")
@@ -102,10 +104,12 @@ if __name__ == "__main__":
     
     parser.add_argument("--T", type=int, default=10, help="Threshold T")
     parser.add_argument("--s", type=float, default=5.0, help="Specificity s")
+    parser.add_argument("--threshold", type=int, default=-1, help="Threshold for feedback")
 
     parser.add_argument("--feedback", action='store_true')
     parser.add_argument("--compression", action='store_true')
     parser.add_argument("--optuna", action='store_true')
+    parser.add_argument("--trace", action='store_true')
 
     args = parser.parse_args()
 
@@ -179,32 +183,52 @@ if __name__ == "__main__":
         non_target_type_1_count_list = []
         non_target_type_2_count_list = []
 
+        import numpy as np
+        rates = np.linspace(0, 25, N_EPOCHS)
         for epoch in range(N_EPOCHS):
             log(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
+            traces = Traces() if args.trace else None
+
+            if args.threshold >= 0:
+                for c in range(tsetlin.n_classes):
+                    for clause in tsetlin.pos_clauses[c] + tsetlin.neg_clauses[c]:
+                        clause.p_trainable_literals = []
+                        clause.n_trainable_literals = []
+                        for i in range(tsetlin.n_features):
+                            if clause.p_automata[i].state > rates[epoch]:
+                                clause.p_trainable_literals.append(i)
+                            if clause.n_automata[i].state > rates[epoch]:
+                                clause.n_trainable_literals.append(i)
+
             target_type_1_count = 0
             target_type_2_count = 0
             non_target_type_1_count = 0
             non_target_type_2_count = 0
             for i in m_tqdm(range(len(X_train))):
-                feedback = tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s, return_feedback=args.feedback)
+                feedback = tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s, return_feedback=args.feedback, threshold=args.threshold, trace=traces)
+
                 if args.feedback:
                     target_type_1_count += feedback['target']['type-1']
                     target_type_2_count += feedback['target']['type-2']
                     non_target_type_1_count += feedback['non-target']['type-1']
                     non_target_type_2_count += feedback['non-target']['type-2']
+
             if args.feedback:
                 target_type_1_rel_change = 0.0
                 target_type_2_rel_change = 0.0
                 if len(target_type_1_count_list) > 0:
                     target_type_1_rel_change = abs((target_type_1_count - target_type_1_count_list[-1]) / target_type_1_count_list[-1] * 100)
                     target_type_2_rel_change = abs((target_type_2_count - target_type_2_count_list[-1]) / target_type_2_count_list[-1] * 100)
+    
                 non_target_type_1_rel_change = 0.0
                 non_target_type_2_rel_change = 0.0
                 if len(non_target_type_1_count_list) > 0:
                     non_target_type_1_rel_change = abs((non_target_type_1_count - non_target_type_1_count_list[-1]) / non_target_type_1_count_list[-1] * 100)
                     non_target_type_2_rel_change = abs((non_target_type_2_count - non_target_type_2_count_list[-1]) / non_target_type_2_count_list[-1] * 100)
+
                 log(f"Target Type I Feedbacks: {target_type_1_count}, Tolerance {target_type_1_rel_change:.2f}%, Target Type II Feedbacks: {target_type_2_count}, Tolerance {target_type_2_rel_change:.2f}%")
                 log(f"Non-Target Type I Feedbacks: {non_target_type_1_count}, Tolerance {non_target_type_1_rel_change:.2f}%, Non-Target Type II Feedbacks: {non_target_type_2_count}, Tolerance {non_target_type_2_rel_change:.2f}% ")
+
             y_pred = tsetlin.predict(X_train)
             accuracy = sum(y_pred == y_train) / len(y_train)
 
@@ -219,7 +243,13 @@ if __name__ == "__main__":
                 target_type_2_count_list.append(target_type_2_count)
                 non_target_type_1_count_list.append(non_target_type_1_count)
                 non_target_type_2_count_list.append(non_target_type_2_count)
-        
+
+            if args.trace:
+                # Save traces to file 
+                traces_file = f"traces_{args.threshold}_{epoch}.pb"
+                with open(traces_file, "wb") as f:
+                    f.write(traces.SerializeToString())
+
         if args.feedback:
             import matplotlib.pyplot as plt
             epochs = list(range(1, len(target_type_1_count_list) + 1))

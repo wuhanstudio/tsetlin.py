@@ -10,14 +10,16 @@ import argparse
 import mnist
 from bitarray import bitarray
 
+from tsetlin import Tsetlin
+from tsetlin.utils.tqdm import m_tqdm
+from tsetlin.utils.dataset import balance_dataset
+
 from loguru import logger
 logger.remove()
 logger.add("train.log", level="DEBUG", colorize=False, backtrace=True, diagnose=True)
 logger.add(sys.stdout, level="INFO")
 
-from tsetlin import Tsetlin
-from tsetlin.utils.tqdm import m_tqdm
-from tsetlin.utils.dataset import balance_dataset
+from trace_pb2 import Traces
 
 mnist.datasets_url = "https://ossci-datasets.s3.amazonaws.com/mnist/"
 
@@ -33,13 +35,13 @@ y_test = mnist.test_labels()
 X_test[X_test <= 75] = 0
 X_test[X_test > 75] = 1
 
-# indices = balance_dataset(X_train, y_train, num_per_class=600)
-# X_train = X_train[indices]
-# y_train = y_train[indices]
+indices = balance_dataset(X_train, y_train, num_per_class=600)
+X_train = X_train[indices]
+y_train = y_train[indices]
 
-# indices = balance_dataset(X_test, y_test, num_per_class=100)
-# X_test = X_test[indices]
-# y_test = y_test[indices]
+indices = balance_dataset(X_test, y_test, num_per_class=100)
+X_test = X_test[indices]
+y_test = y_test[indices]
 
 logger.info(f"Train images shape: {X_train.shape}, Train labels shape: {y_train.shape}")
 logger.info(f"Test images shape: {X_test.shape}, Test labels shape: {y_test.shape}")
@@ -137,8 +139,10 @@ if __name__ == "__main__":
     non_target_type_1_count_list = []
     non_target_type_2_count_list = []
 
+
     for epoch in range(N_EPOCHS):
         logger.info(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
+        traces = Traces()
 
         target_type_1_count = 0
         target_type_2_count = 0
@@ -146,7 +150,7 @@ if __name__ == "__main__":
         non_target_type_2_count = 0
 
         for i in m_tqdm(range(len(X_train))):
-            feedback = tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s, return_feedback=args.feedback, threshold=args.threshold, logger=None)
+            feedback = tsetlin.step(X_train[i], y_train[i], T=args.T, s=args.s, return_feedback=args.feedback, threshold=args.threshold,  trace=traces)
 
             if args.feedback:
                 target_type_1_count += feedback['target']['type-1']
@@ -183,7 +187,12 @@ if __name__ == "__main__":
             target_type_2_count_list.append(target_type_2_count)
             non_target_type_1_count_list.append(non_target_type_1_count)
             non_target_type_2_count_list.append(non_target_type_2_count)
-    
+
+        # Save traces to file 
+        traces_file = f"traces_compressed_{args.threshold}_{epoch}.pb"
+        with open(traces_file, "wb") as f:
+            f.write(traces.SerializeToString())
+
     if args.feedback:
         import matplotlib.pyplot as plt
         epochs = list(range(1, N_EPOCHS + 1))
