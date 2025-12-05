@@ -142,27 +142,58 @@ class Tsetlin:
         tm_model.n_clauses = tm.n_clause
         tm_model.n_states = tm.n_state
 
-        tm_model.pos_clauses = []
-        tm_model.neg_clauses = []
-        for i in range(tm_model.n_classes):
-            pos_clauses = []
-            neg_clauses = []
-            for j in range(tm_model.n_clauses // 2):
-                p_clause = tm.clauses[i * tm_model.n_clauses + j * 2]
-                n_clause = tm.clauses[i * tm_model.n_clauses + j * 2 + 1]
+        if tm.model_type == tsetlin_pb2.ModelType.COMPRESSED:
+            tm_model.pos_clauses = []
+            tm_model.neg_clauses = []
+            for i in range(tm_model.n_classes):
+                pos_clauses = []
+                neg_clauses = []
+                for j in range(tm_model.n_clauses // 2):
+                    p_clause_c = tm.clauses_compressed[i * tm_model.n_clauses + j * 2]
+                    n_clause_c = tm.clauses_compressed[i * tm_model.n_clauses + j * 2 + 1]
 
-                # Set positive clauses
-                pos_clause = Clause(tm_model.n_features, tm_model.n_states)
-                pos_clause.set_state(p_clause.data, threshold=threshold)
-                pos_clauses.append(pos_clause)
+                    # Set positive clauses
+                    pos_clause = Clause(tm_model.n_features, tm_model.n_states)
 
-                # Set negative clauses
-                neg_clause = Clause(tm_model.n_features, tm_model.n_states)
-                neg_clause.set_state(n_clause.data, threshold=threshold)
-                neg_clauses.append(neg_clause)
+                    pos_clause.p_trainable_literals = p_clause_c.position[:p_clause_c.n_pos_literal]
+                    pos_clause.n_trainable_literals = p_clause_c.position[p_clause_c.n_pos_literal:]
 
-            tm_model.pos_clauses.append(pos_clauses)
-            tm_model.neg_clauses.append(neg_clauses)
+                    pos_clause.set_compressed_state(p_clause_c.n_pos_literal, p_clause_c.n_neg_literal, p_clause_c.position, p_clause_c.data)
+                    pos_clauses.append(pos_clause)
+
+                    # Set negative clauses
+                    neg_clause = Clause(tm_model.n_features, tm_model.n_states)
+
+                    neg_clause.p_trainable_literals = n_clause_c.position[:n_clause_c.n_pos_literal]
+                    neg_clause.n_trainable_literals = n_clause_c.position[n_clause_c.n_pos_literal:]
+
+                    neg_clause.set_compressed_state(n_clause_c.n_pos_literal, n_clause_c.n_neg_literal, n_clause_c.position, n_clause_c.data)
+                    neg_clauses.append(neg_clause)
+
+                tm_model.pos_clauses.append(pos_clauses)
+                tm_model.neg_clauses.append(neg_clauses)
+        else:
+            tm_model.pos_clauses = []
+            tm_model.neg_clauses = []
+            for i in range(tm_model.n_classes):
+                pos_clauses = []
+                neg_clauses = []
+                for j in range(tm_model.n_clauses // 2):
+                    p_clause = tm.clauses[i * tm_model.n_clauses + j * 2]
+                    n_clause = tm.clauses[i * tm_model.n_clauses + j * 2 + 1]
+
+                    # Set positive clauses
+                    pos_clause = Clause(tm_model.n_features, tm_model.n_states)
+                    pos_clause.set_state(p_clause.data)
+                    pos_clauses.append(pos_clause)
+
+                    # Set negative clauses
+                    neg_clause = Clause(tm_model.n_features, tm_model.n_states)
+                    neg_clause.set_state(n_clause.data)
+                    neg_clauses.append(neg_clause)
+
+                tm_model.pos_clauses.append(pos_clauses)
+                tm_model.neg_clauses.append(neg_clauses)
 
         return tm_model
 
@@ -218,33 +249,63 @@ class Tsetlin:
         tm.n_clause = self.n_clauses
         tm.n_state = self.n_states
 
-        if type not in ["training", "inference"]:
-            raise ValueError("type must be either 'training' or 'inference'")
-        
+        if type not in ["training", "inference", "compressed"]:
+            raise ValueError("type must be either 'training', 'inference', or 'compressed'")
+
         if type == "training":
             tm.model_type = tsetlin_pb2.ModelType.TRAINING
-        else:
+        elif type == "inference":
             tm.model_type = tsetlin_pb2.ModelType.INFERENCE
+        else:
+            tm.model_type = tsetlin_pb2.ModelType.COMPRESSED
 
         for i in range(self.n_classes):
             for j in range(self.n_clauses // 2):
-                # Positive clauses
-                pos_c = tsetlin_pb2.Clause()
-                pos_c.n_feature = self.n_features
-                pos_c.n_state = self.n_states
+                if type == "compressed":
+                    # Compress clause before saving
+                    pos_c = tsetlin_pb2.ClauseCompressed()
+                    pos_c.n_pos_literal = len(self.pos_clauses[i][j].p_trainable_literals)
+                    pos_c.n_neg_literal = len(self.pos_clauses[i][j].n_trainable_literals)
 
-                pos_c.data.extend([to_int32(x) for x in self.pos_clauses[i][j].get_state()])
+                    pos_c.n_state = self.n_states
 
-                tm.clauses.append(pos_c)
+                    pos_c.position.extend([to_int32(x) for x in self.pos_clauses[i][j].p_trainable_literals])
+                    pos_c.position.extend([to_int32(x) for x in self.pos_clauses[i][j].n_trainable_literals])
+                    pos_c.data.extend([to_int32(x) for x in self.pos_clauses[i][j].get_compressed_state()])
 
-                # Negative clauses
-                neg_c = tsetlin_pb2.Clause()
-                neg_c.n_feature = self.n_features
-                neg_c.n_state = self.n_states
+                    tm.clauses_compressed.append(pos_c)
 
-                neg_c.data.extend([to_int32(x) for x in self.neg_clauses[i][j].get_state()])
+                    # Negative clauses
+                    neg_c = tsetlin_pb2.ClauseCompressed()
+                    neg_c.n_pos_literal = len(self.neg_clauses[i][j].p_trainable_literals)
+                    neg_c.n_neg_literal = len(self.neg_clauses[i][j].n_trainable_literals)
 
-                tm.clauses.append(neg_c)
+                    neg_c.n_state = self.n_states
+
+                    neg_c.position.extend([to_int32(x) for x in self.neg_clauses[i][j].p_trainable_literals])
+                    neg_c.position.extend([to_int32(x) for x in self.neg_clauses[i][j].n_trainable_literals])
+                    neg_c.data.extend([to_int32(x) for x in self.neg_clauses[i][j].get_compressed_state()])
+
+                    tm.clauses_compressed.append(neg_c)
+
+                else:
+                    # Positive clauses
+                    pos_c = tsetlin_pb2.Clause()
+                    pos_c.n_feature = self.n_features
+                    pos_c.n_state = self.n_states
+
+                    pos_c.data.extend([to_int32(x) for x in self.pos_clauses[i][j].get_state()])
+
+                    tm.clauses.append(pos_c)
+
+                    # Negative clauses
+                    neg_c = tsetlin_pb2.Clause()
+                    neg_c.n_feature = self.n_features
+                    neg_c.n_state = self.n_states
+
+                    neg_c.data.extend([to_int32(x) for x in self.neg_clauses[i][j].get_state()])
+
+                    tm.clauses.append(neg_c)
 
         with open(path, "wb") as f:
             f.write(tm.SerializeToString())

@@ -5,6 +5,8 @@ import argparse
 from bitarray import bitarray
 
 import mnist
+import numpy as np
+
 from tsetlin import Tsetlin
 
 from tsetlin.utils.log import log
@@ -183,11 +185,29 @@ if __name__ == "__main__":
         non_target_type_1_count_list = []
         non_target_type_2_count_list = []
 
-        import numpy as np
-        rates = np.linspace(0, 25, N_EPOCHS)
+        # Linear
+        # rates = np.linspace(0, 25, N_EPOCHS)
+
+        # Cosine
+        # x = np.linspace(0, np.pi, N_EPOCHS)
+        # rates = ((1 - np.cos(x)) / 2) * 25
+
+        # Sigmoid
+        # x = np.linspace(-6, 6, N_EPOCHS)
+        # rates = (1 / (1 + np.exp(-x))) * 25
+
+        # Exponential
+        x = np.linspace(0, 1, N_EPOCHS)
+        y = 1 - np.exp(-5 * x)
+        y /= y[-1]   # normalize to 1
+        rates = y * 25
+
+        accuracy_list = []
         for epoch in range(N_EPOCHS):
             log(f"[Epoch {epoch+1}/{N_EPOCHS}] Train Accuracy: {accuracy * 100:.2f}%")
             traces = Traces() if args.trace else None
+            
+            accuracy_list.append(accuracy)
 
             if args.threshold >= 0:
                 for c in range(tsetlin.n_classes):
@@ -263,6 +283,14 @@ if __name__ == "__main__":
             plt.legend()
             plt.show()
 
+            epochs = list(range(1, N_EPOCHS + 1))
+            plt.plot(epochs, accuracy_list, label='Training Accuracy')
+            plt.xlabel('Epoch')
+            plt.ylabel('Accuracy')
+            plt.title('Training Accuracy per Epoch')
+            plt.legend()
+            plt.show()
+
         # tsetlin.fit(X_train, y_train, T=15, s=3, epochs=EPOCHS)
 
         log("")
@@ -279,6 +307,23 @@ if __name__ == "__main__":
 
         log("")
 
+        # Save the compressed model
+        if args.threshold >= 0:
+            for c in range(tsetlin.n_classes):
+                for clause in tsetlin.pos_clauses[c] + tsetlin.neg_clauses[c]:
+                    clause.p_trainable_literals = []
+                    clause.n_trainable_literals = []
+                    for i in range(tsetlin.n_features):
+                        if clause.p_automata[i].state > rates[epoch]:
+                            clause.p_trainable_literals.append(i)
+                        if clause.n_automata[i].state > rates[epoch]:
+                            clause.n_trainable_literals.append(i)
+
+        tsetlin.save_model("tsetlin_model.cpb", type="compressed")
+        log("Compressed Model saved to tsetlin_model.cpb")
+
+        log("")
+
         # Load the model
         n_tsetlin = Tsetlin.load_model("tsetlin_model.pb")
         log("Model loaded from tsetlin_model.pb")
@@ -288,3 +333,13 @@ if __name__ == "__main__":
         accuracy = sum(n_y_pred == y_test) / len(y_test)
 
         log(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
+
+        # Load the compressed model
+        n_tsetlin = Tsetlin.load_model("tsetlin_model.cpb")
+        log("Compressed Model loaded from tsetlin_model.cpb")
+
+        # Evaluate the loaded compressed model
+        n_y_pred = n_tsetlin.predict(X_test)
+        accuracy = sum(n_y_pred == y_test) / len(y_test)
+
+        log(f"Test Accuracy (Loaded Compressed Model): {accuracy * 100:.2f}%")

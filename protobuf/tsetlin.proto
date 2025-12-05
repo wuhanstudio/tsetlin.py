@@ -1,15 +1,26 @@
-edition = "2023";
+syntax = "proto3";
 
 enum ModelType {
     INFERENCE = 0;
     TRAINING = 1;
+    COMPRESSED = 2;
 }
 
 message Clause {
     uint32 n_feature = 1;
     uint32 n_state   = 2;
 
-    repeated int32 data = 3;
+    repeated uint32 data = 3;
+}
+
+message ClauseCompressed {
+    uint32 n_pos_literal = 1;
+    uint32 n_neg_literal = 2;
+
+    uint32 n_state   = 3;
+
+    repeated uint32 position = 4;
+    repeated uint32 data     = 5;
 }
 
 message Tsetlin {
@@ -21,4 +32,6 @@ message Tsetlin {
     ModelType model_type = 5;
 
     repeated Clause clauses = 6;
+
+    repeated ClauseCompressed clauses_compressed = 7;
 }
