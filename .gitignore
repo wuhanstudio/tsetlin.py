@@ -2,6 +2,7 @@
 __pycache__/
 *.pb
 *.upb
+*.cpb
 *.sqlite3
 *.h5
 *.log
