@@ -19,19 +19,47 @@ for epoch in range(epochs):
         elif trace.type == Trace.Type.TYPE_II:
             type_II_df.append(trace.state)
 
-    # Plot a histogram of the states
-    plt.hist(type_I_df, bins=10, align='left', rwidth=0.8)
-    plt.xlabel('State')
+    # Draw histogram
+    fig, ax = plt.subplots()
+    counts, bins, patches = ax.hist(type_I_df, bins=10, edgecolor='black')
+
+    # Total number of samples
+    total = counts.sum()
+
+    # Add percentages above bars
+    for count, bin_left, bin_right in zip(counts, bins[:-1], bins[1:]):
+        if count == 0:
+            continue  # skip empty bins
+        x = (bin_left + bin_right) / 2  # center of bar
+        y = count
+        percent = (count / total) * 100
+        ax.text(x, y, f"{percent:.2f}%", ha='center', va='bottom', fontsize=8)
+
+    plt.xlabel("State")
     plt.xlim(0, 50)
-    plt.vlines(x=25, ymin=0, ymax=plt.ylim()[1], colors='r', linestyles='dashed', label='Midpoint')
-    plt.ylabel('Frequency')
-    plt.title(f'Histogram of Type I States - Epoch {epoch}')
+    plt.vlines(25, ymin=0, ymax=max(counts), colors='r', linestyles='dashed', label='middle point')
+    plt.ylabel("Frequency")
+    plt.title("Histogram of Type I States with Percentages")
     plt.show()
 
-    plt.hist(type_II_df, bins=10, align='left', rwidth=0.8)
-    plt.xlabel('State')
+    # Draw histogram
+    fig, ax = plt.subplots()
+    counts, bins, patches = ax.hist(type_II_df, bins=10, edgecolor='black')
+    # Total number of samples
+    total = counts.sum()
+
+    # Add percentages above bars
+    for count, bin_left, bin_right in zip(counts, bins[:-1], bins[1:]):
+        if count == 0:
+            continue  # skip empty bins
+        x = (bin_left + bin_right) / 2  # center of bar
+        y = count
+        percent = (count / total) * 100
+        ax.text(x, y, f"{percent:.2f}%", ha='center', va='bottom', fontsize=8)
+    
+    plt.xlabel("State")
     plt.xlim(0, 50)
-    plt.vlines(x=25, ymin=0, ymax=plt.ylim()[1], colors='r', linestyles='dashed', label='Midpoint')
-    plt.ylabel('Frequency')
-    plt.title(f'Histogram of Type II States - Epoch {epoch}')
+    plt.vlines(25, ymin=0, ymax=max(counts), colors='r', linestyles='dashed', label='middle point')
+    plt.ylabel("Frequency")
+    plt.title("Histogram of Type II States with Percentages")
     plt.show()
