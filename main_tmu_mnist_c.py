@@ -18,12 +18,12 @@ test_ds = tfds.as_numpy(test_ds)
 
 data = {}
 data['x_train'] = np.array([example['image'].flatten() for example in train_ds])
-data['x_train'][data['x_train'] > 0] = 1
+data['x_train'][data['x_train'] > 75] = 1
 
 data['y_train'] = np.array([example['label'] for example in train_ds])
 
 data['x_test'] = np.array([example['image'].flatten() for example in test_ds])
-data['x_test'][data['x_test'] > 0] = 1
+data['x_test'][data['x_test'] > 75] = 1
 
 data['y_test'] = np.array([example['label'] for example in test_ds])
 
