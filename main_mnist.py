@@ -13,6 +13,7 @@ from tsetlin.utils.log import log
 from tsetlin.utils.tqdm import m_tqdm
 from tsetlin.utils.dataset import balance_dataset
 
+import sklearn
 from trace_pb2 import Traces
 
 mnist.datasets_url = "https://ossci-datasets.s3.amazonaws.com/mnist/"
@@ -28,6 +29,9 @@ y_test = mnist.test_labels()
 
 X_test[X_test <= 75] = 0
 X_test[X_test > 75] = 1
+
+# Shuffle training data
+X_train, y_train = sklearn.utils.shuffle(X_train, y_train, random_state=0)
 
 # indices = balance_dataset(X_train, y_train, num_per_class=600)
 # X_train = X_train[indices]
@@ -99,12 +103,12 @@ def plot_histogram(tsetlin):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tsetlin Machine on Iris Dataset")
-    parser.add_argument("--epochs", type=int, default=10, help="Number of training epochs")
+    parser.add_argument("--epochs", type=int, default=30, help="Number of training epochs")
 
-    parser.add_argument("--n_clause", type=int, default=100, help="Number of clauses")
-    parser.add_argument("--n_state", type=int, default=50, help="Number of states")
+    parser.add_argument("--n_clause", type=int, default=200, help="Number of clauses")
+    parser.add_argument("--n_state", type=int, default=100, help="Number of states")
     
-    parser.add_argument("--T", type=int, default=10, help="Threshold T")
+    parser.add_argument("--T", type=int, default=20, help="Threshold T")
     parser.add_argument("--s", type=float, default=5.0, help="Specificity s")
     parser.add_argument("--threshold", type=int, default=-1, help="Threshold for feedback")
 
@@ -186,21 +190,21 @@ if __name__ == "__main__":
         non_target_type_2_count_list = []
 
         # Linear
-        # rates = np.linspace(0, (N_STATE / 2), N_EPOCHS)
+        # rates = np.linspace(0, (N_STATE / 2 - 5), N_EPOCHS)
 
         # Cosine
-        # x = np.linspace(0, np.pi, N_EPOCHS)
-        # rates = ((1 - np.cos(x)) / 2) * (N_STATE / 2)
+        x = np.linspace(0, np.pi, N_EPOCHS)
+        rates = ((1 - np.cos(x)) / 2) * (N_STATE / 2 - 5)  # leave some margin
 
         # Sigmoid
         # x = np.linspace(-6, 6, N_EPOCHS)
-        # rates = (1 / (1 + np.exp(-x))) * (N_STATE / 2)
+        # rates = (1 / (1 + np.exp(-x))) * (N_STATE / 2 - 5)
 
         # Exponential
-        x = np.linspace(0, 1, N_EPOCHS)
-        y = 1 - np.exp(-5 * x)
-        y /= y[-1]   # normalize to 1
-        rates = y * (N_STATE / 2)
+        # x = np.linspace(0, 1, N_EPOCHS)
+        # y = 1 - np.exp(-5 * x)
+        # y /= y[-1]   # normalize to 1
+        # rates = y * (N_STATE / 2 - 2)  # leave some margin
 
         accuracy_list = []
         for epoch in range(N_EPOCHS):
@@ -219,6 +223,9 @@ if __name__ == "__main__":
                                 clause.p_trainable_literals.append(i)
                             if clause.n_automata[i].state > rates[epoch]:
                                 clause.n_trainable_literals.append(i)
+
+                tsetlin.save_model(f"tsetlin_model_epoch_{epoch+1}.cpb", type="compressed")
+                log(f"Compressed Model saved to tsetlin_model_epoch_{epoch+1}.cpb")
 
             target_type_1_count = 0
             target_type_2_count = 0
@@ -307,6 +314,16 @@ if __name__ == "__main__":
 
         log("")
 
+        # Load the model
+        n_tsetlin = Tsetlin.load_model("tsetlin_model.pb")
+        log("Model loaded from tsetlin_model.pb")
+
+        # Evaluate the loaded model
+        n_y_pred = n_tsetlin.predict(X_test)
+        accuracy = sum(n_y_pred == y_test) / len(y_test)
+
+        log(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
+
         # Save the compressed model
         if args.threshold >= 0:
             for c in range(tsetlin.n_classes):
@@ -319,17 +336,6 @@ if __name__ == "__main__":
                         if clause.n_automata[i].state > rates[epoch]:
                             clause.n_trainable_literals.append(i)
 
-        # Load the model
-        n_tsetlin = Tsetlin.load_model("tsetlin_model.pb")
-        log("Model loaded from tsetlin_model.pb")
-
-        # Evaluate the loaded model
-        n_y_pred = n_tsetlin.predict(X_test)
-        accuracy = sum(n_y_pred == y_test) / len(y_test)
-
-        log(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
-
-        if args.threshold >= 0:
             tsetlin.save_model("tsetlin_model.cpb", type="compressed")
             log("Compressed Model saved to tsetlin_model.cpb")
 
