@@ -1,4 +1,5 @@
 import random
+
 random.seed(0)
 
 import argparse
@@ -11,24 +12,42 @@ from tsetlin import Tsetlin
 
 from tsetlin.utils.log import log
 from tsetlin.utils.tqdm import m_tqdm
+
 from tsetlin.utils.dataset import balance_dataset
+from tsetlin.utils.booleanize import booleanize_features
 
 import sklearn
 from trace_pb2 import Traces
 
 mnist.datasets_url = "https://ossci-datasets.s3.amazonaws.com/mnist/"
 
+# Load training data
 X_train = mnist.train_images()
 y_train = mnist.train_labels()
 
-X_train[X_train <= 75] = 0
-X_train[X_train > 75] = 1
+# Normalization
+X_train = X_train.reshape(X_train.shape[0], -1)
+X_mean = np.mean(X_train)
+X_std = np.std(X_train)
 
+X_train = X_train.astype(np.float32)
+X_train = booleanize_features(X_train, X_mean, X_std, num_bits=8)
+X_train = np.array(X_train)
+
+# X_train[X_train <= 75] = 0
+# X_train[X_train > 75] = 1
+
+# Load test data
 X_test = mnist.test_images()
 y_test = mnist.test_labels()
 
-X_test[X_test <= 75] = 0
-X_test[X_test > 75] = 1
+X_test = X_test.reshape(X_test.shape[0], -1)
+X_test = X_test.astype(np.float32)
+X_test = booleanize_features(X_test, X_mean, X_std, num_bits=8)
+X_test = np.array(X_test)
+
+# X_test[X_test <= 75] = 0
+# X_test[X_test > 75] = 1
 
 # Shuffle training data
 X_train, y_train = sklearn.utils.shuffle(X_train, y_train, random_state=0)
