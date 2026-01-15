@@ -240,7 +240,7 @@ class Tsetlin:
 
         return tm_model
 
-    def save_model(self, path, type="training"):
+    def save_model(self, path, type="training", retrain=False):
         import tsetlin_pb2
         tm = tsetlin_pb2.Tsetlin()
 
@@ -271,7 +271,11 @@ class Tsetlin:
 
                     pos_c.position.extend([to_int32(x) for x in self.pos_clauses[i][j].p_trainable_literals])
                     pos_c.position.extend([to_int32(x) for x in self.pos_clauses[i][j].n_trainable_literals])
-                    pos_c.data.extend([to_int32(x) for x in self.pos_clauses[i][j].get_compressed_state()])
+
+                    if retrain:
+                        pos_c.data.extend([to_int32(self.n_states // 2) for x in self.pos_clauses[i][j].get_compressed_state()])
+                    else:
+                        pos_c.data.extend([to_int32(x) for x in self.pos_clauses[i][j].get_compressed_state()])
 
                     tm.clauses_compressed.append(pos_c)
 
@@ -284,7 +288,11 @@ class Tsetlin:
 
                     neg_c.position.extend([to_int32(x) for x in self.neg_clauses[i][j].p_trainable_literals])
                     neg_c.position.extend([to_int32(x) for x in self.neg_clauses[i][j].n_trainable_literals])
-                    neg_c.data.extend([to_int32(x) for x in self.neg_clauses[i][j].get_compressed_state()])
+
+                    if retrain:
+                        neg_c.data.extend([to_int32(self.n_states // 2) for x in self.neg_clauses[i][j].get_compressed_state()])
+                    else:
+                        neg_c.data.extend([to_int32(x) for x in self.neg_clauses[i][j].get_compressed_state()])
 
                     tm.clauses_compressed.append(neg_c)
 
