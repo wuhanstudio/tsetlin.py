@@ -7,4 +7,5 @@ __pycache__/
 *.h5
 *.log
 temp/
+mnist_c/
 .ipynb_checkpoints/
