@@ -1,3 +1,4 @@
+import sys
 from tsetlin.utils.tqdm import m_tqdm
 from tsetlin.utils.norm import norm_cdf
 
@@ -20,15 +21,26 @@ def booleanize(x: float, num_bits: int=8) -> list[bool]:
 
 def booleanize_features(X, mean, std, num_bits: int=8):
     # Normalization to [0, 255]
-    for i in range(len(X)):
-        for j in range(len(X[i])):
-            if isinstance(mean, list) and isinstance(std, list):
-                X[i][j] = (X[i][j] - mean[j]) / std[j]
-            else:
-                X[i][j] = (X[i][j] - mean) / std
+    if sys.implementation.name == 'micropython':
+        for i in m_tqdm(range(len(X)), desc="Normalizing features"):
+            for j in range(len(X[i])):
+                if isinstance(mean, list) and isinstance(std, list):
+                    X[i][j] = (X[i][j] - mean[j]) / std[j]
+                else:
+                    X[i][j] = (X[i][j] - mean) / std
 
-            # Map to [0, 1] using CDF of standard normal distribution
-            X[i][j] = norm_cdf(X[i][j])
+                # Map to [0, 1] using CDF of standard normal distribution
+                X[i][j] = norm_cdf(X[i][j])
+    else:
+        import numpy as np
+        from scipy.stats import norm
+
+        X = np.array(X)
+        if isinstance(mean, list) and isinstance(std, list):
+            mean = np.array(mean)
+            std = np.array(std)
+
+        X = norm.cdf((X - mean) / std)
 
     # Mistake: Shouldn't do this
     # X = [[int(x* 255) for x in row] for row in X]

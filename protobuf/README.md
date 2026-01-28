@@ -12,6 +12,12 @@ $ uv sync
 $ source .venv/bin/activate
 ```
 
+C:
+
+```
+$ protoc --c_out=./ tsetlin.proto
+```
+
 Python:
 
 ```

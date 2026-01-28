@@ -25,32 +25,9 @@ mnist.datasets_url = "https://ossci-datasets.s3.amazonaws.com/mnist/"
 X_train = mnist.train_images()
 y_train = mnist.train_labels()
 
-# Normalization
-X_train = X_train.reshape(X_train.shape[0], -1)
-X_mean = np.mean(X_train)
-X_std = np.std(X_train)
-
-X_train = X_train.astype(np.float32)
-X_train = booleanize_features(X_train, X_mean, X_std, num_bits=8)
-X_train = np.array(X_train)
-
-# X_train[X_train <= 75] = 0
-# X_train[X_train > 75] = 1
-
 # Load test data
 X_test = mnist.test_images()
 y_test = mnist.test_labels()
-
-X_test = X_test.reshape(X_test.shape[0], -1)
-X_test = X_test.astype(np.float32)
-X_test = booleanize_features(X_test, X_mean, X_std, num_bits=8)
-X_test = np.array(X_test)
-
-# X_test[X_test <= 75] = 0
-# X_test[X_test > 75] = 1
-
-# Shuffle training data
-X_train, y_train = sklearn.utils.shuffle(X_train, y_train, random_state=0)
 
 # indices = balance_dataset(X_train, y_train, num_per_class=600)
 # X_train = X_train[indices]
@@ -63,20 +40,28 @@ X_train, y_train = sklearn.utils.shuffle(X_train, y_train, random_state=0)
 log(f"Train images shape: {X_train.shape}, Train labels shape: {y_train.shape}")
 log(f"Test images shape: {X_test.shape}, Test labels shape: {y_test.shape}")
 
-def ask_compression():
-    while True:
-        choice = input("Compress and Exit? (y/n): ").strip().lower()
+# Normalization
+X_mean = np.mean(X_train)
+X_std = np.std(X_train)
 
-        if choice in ("y", "n"):
-            break
-        print("Please enter 'y' or 'n'.")
+X_train = X_train.reshape(X_train.shape[0], -1)
+X_train = X_train.astype(np.float32)
+X_train = booleanize_features(X_train, X_mean, X_std, num_bits=8)
+X_train = np.array(X_train)
 
-    if choice == "y":
-        print("Yes selected")
-        return True
-    else:
-        print("No selected")
-        return False
+# X_train[X_train <= 75] = 0
+# X_train[X_train > 75] = 1
+
+X_test = X_test.reshape(X_test.shape[0], -1)
+X_test = X_test.astype(np.float32)
+X_test = booleanize_features(X_test, X_mean, X_std, num_bits=8)
+X_test = np.array(X_test)
+
+# X_test[X_test <= 75] = 0
+# X_test[X_test > 75] = 1
+
+# Shuffle training data
+X_train, y_train = sklearn.utils.shuffle(X_train, y_train, random_state=0)
 
 def plot_histogram(tsetlin):
     cube = []
@@ -132,7 +117,6 @@ if __name__ == "__main__":
     parser.add_argument("--threshold", type=int, default=-1, help="Threshold for feedback")
 
     parser.add_argument("--feedback", action='store_true')
-    parser.add_argument("--compression", action='store_true')
     parser.add_argument("--optuna", action='store_true')
     parser.add_argument("--trace", action='store_true')
 
@@ -146,8 +130,8 @@ if __name__ == "__main__":
     log(f"Threshold T: {args.T}, Specificity s: {args.s}")
 
     # Flatten images
-    X_train = X_train.reshape((X_train.shape[0], -1))
-    X_test = X_test.reshape((X_test.shape[0], -1))
+    # X_train = X_train.reshape((X_train.shape[0], -1))
+    # X_test = X_test.reshape((X_test.shape[0], -1))
 
     # Normalization (not really needed for MNIST)
     # X_train = booleanize_features(X_train, 0, 1.0, num_bits=N_BIT)
@@ -201,12 +185,11 @@ if __name__ == "__main__":
         y_pred = tsetlin.predict(X_test)
         accuracy = sum(y_pred == y_test) / len(y_test)
 
-        # plot_histogram(tsetlin)
-
-        target_type_1_count_list = []
-        target_type_2_count_list = []
-        non_target_type_1_count_list = []
-        non_target_type_2_count_list = []
+        if args.feedback:
+            target_type_1_count_list = []
+            target_type_2_count_list = []
+            non_target_type_1_count_list = []
+            non_target_type_2_count_list = []
 
         # Linear
         # rates = np.linspace(0, (N_STATE / 2 - 5), N_EPOCHS)
@@ -277,10 +260,6 @@ if __name__ == "__main__":
 
             y_pred = tsetlin.predict(X_test)
             accuracy = sum(y_pred == y_test) / len(y_test)
-
-            if args.compression:
-                if ask_compression():
-                    break
 
             # plot_histogram(tsetlin)
 
