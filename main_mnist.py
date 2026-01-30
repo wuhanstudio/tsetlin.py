@@ -107,14 +107,14 @@ def plot_histogram(tsetlin):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tsetlin Machine on Iris Dataset")
-    parser.add_argument("--epochs", type=int, default=30, help="Number of training epochs")
 
-    parser.add_argument("--n_clause", type=int, default=200, help="Number of clauses")
-    parser.add_argument("--n_state", type=int, default=100, help="Number of states")
+    parser.add_argument("--epochs", type=int, default=30, help="Number of training epochs")
+    parser.add_argument("--n_clause", type=int, default=100, help="Number of clauses")
+    parser.add_argument("--n_state", type=int, default=50, help="Number of states")
     
     parser.add_argument("--T", type=int, default=20, help="Threshold T")
     parser.add_argument("--s", type=float, default=5.0, help="Specificity s")
-    parser.add_argument("--threshold", type=int, default=-1, help="Threshold for feedback")
+    parser.add_argument("--threshold", type=int, default=10, help="Threshold for feedback")
 
     parser.add_argument("--feedback", action='store_true')
     parser.add_argument("--optuna", action='store_true')
@@ -196,7 +196,7 @@ if __name__ == "__main__":
 
         # Cosine
         x = np.linspace(0, np.pi, N_EPOCHS)
-        rates = ((1 - np.cos(x)) / 2) * (N_STATE / 2 - 5)  # leave some margin
+        rates = ((1 - np.cos(x)) / 2) * (N_STATE / 2 - 10)  # leave some margin
 
         # Sigmoid
         # x = np.linspace(-6, 6, N_EPOCHS)
@@ -226,8 +226,8 @@ if __name__ == "__main__":
                             if clause.n_automata[i].state > rates[epoch]:
                                 clause.n_trainable_literals.append(i)
 
-                tsetlin.save_model(f"tsetlin_model_epoch_{epoch+1}.cpb", type="compressed")
-                log(f"Compressed Model saved to tsetlin_model_epoch_{epoch+1}.cpb")
+                tsetlin.save_model(f"tsetlin_model_epoch_{epoch+1}.cfpb", type="compressed_offset")
+                log(f"Compressed Model saved to tsetlin_model_epoch_{epoch+1}.cfpb")
 
             target_type_1_count = 0
             target_type_2_count = 0
@@ -305,12 +305,11 @@ if __name__ == "__main__":
         accuracy = sum(y_pred == y_test) / len(y_test)
 
         log(f"Test Accuracy: {accuracy * 100:.2f}%")
+        log("")
 
         # Save the model
         tsetlin.save_model("tsetlin_model.pb", type="training")
         log("Model saved to tsetlin_model.pb")
-
-        log("")
 
         # Load the model
         n_tsetlin = Tsetlin.load_model("tsetlin_model.pb")
@@ -321,6 +320,7 @@ if __name__ == "__main__":
         accuracy = sum(n_y_pred == y_test) / len(y_test)
 
         log(f"Test Accuracy (Loaded Model): {accuracy * 100:.2f}%")
+        log("")
 
         # Save the compressed model
         if args.threshold >= 0:
@@ -337,8 +337,6 @@ if __name__ == "__main__":
             tsetlin.save_model("tsetlin_model.cpb", type="compressed")
             log("Compressed Model saved to tsetlin_model.cpb")
 
-            log("")
-
             # Load the compressed model
             n_tsetlin = Tsetlin.load_model("tsetlin_model.cpb")
             log("Compressed Model loaded from tsetlin_model.cpb")
@@ -348,3 +346,32 @@ if __name__ == "__main__":
             accuracy = sum(n_y_pred == y_test) / len(y_test)
 
             log(f"Test Accuracy (Loaded Compressed Model): {accuracy * 100:.2f}%")
+            log("")
+
+            tsetlin.save_model("tsetlin_model.cfpb", type="compressed_offset")
+            log("Compressed Model saved to tsetlin_model.cfpb")
+
+            # Load the compressed model
+            n_tsetlin = Tsetlin.load_model("tsetlin_model.cfpb")
+            log("Compressed Model loaded from tsetlin_model.cfpb")
+
+            # Evaluate the loaded compressed model
+            n_y_pred = n_tsetlin.predict(X_test)
+            accuracy = sum(n_y_pred == y_test) / len(y_test)
+
+            log(f"Test Accuracy (Loaded Compressed Model - Offset): {accuracy * 100:.2f}%")
+            log("")
+
+            tsetlin.save_model("tsetlin_model.cbpb", type="compressed_bitpack")
+            log("Compressed Model saved to tsetlin_model.cbpb")
+
+            # Load the compressed model
+            n_tsetlin = Tsetlin.load_model("tsetlin_model.cbpb")
+            log("Compressed Model loaded from tsetlin_model.cbpb")
+
+            # Evaluate the loaded compressed model
+            n_y_pred = n_tsetlin.predict(X_test)
+            accuracy = sum(n_y_pred == y_test) / len(y_test)
+
+            log(f"Test Accuracy (Loaded Compressed Model - Bitpack): {accuracy * 100:.2f}%")
+            log("")

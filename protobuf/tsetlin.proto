@@ -4,12 +4,11 @@ enum ModelType {
     INFERENCE = 0;
     TRAINING = 1;
     COMPRESSED = 2;
+    COMPRESSED_OFFSET = 3;
+    COMPRESSED_BITPACK = 4;
 }
 
 message Clause {
-    uint32 n_feature = 1;
-    uint32 n_state   = 2;
-
     repeated uint32 data = 3;
 }
 
@@ -17,10 +16,26 @@ message ClauseCompressed {
     uint32 n_pos_literal = 1;
     uint32 n_neg_literal = 2;
 
-    uint32 n_state   = 3;
-
     repeated uint32 position = 4;
     repeated uint32 data     = 5;
+}
+
+message ClauseCompressedOffset {
+    uint32 n_pos_literal = 1;
+    uint32 n_neg_literal = 2;
+
+    repeated uint32 offset = 4;
+    repeated uint32 data     = 5;
+}
+
+message ClauseCompressedBitpack {
+    // higher 16 bits: n_neg_literal
+    // lower 16 bits:  n_pos_literal
+    uint32 n_literal = 1; 
+
+    // higher 16 bits: position
+    // lower 16 bits:  states
+    repeated uint32 data = 2; 
 }
 
 message Tsetlin {
@@ -32,6 +47,7 @@ message Tsetlin {
     ModelType model_type = 5;
 
     repeated Clause clauses = 6;
-
     repeated ClauseCompressed clauses_compressed = 7;
+    repeated ClauseCompressedOffset clauses_compressed_offset = 8;
+    repeated ClauseCompressedBitpack clauses_compressed_bitpack = 9;
 }

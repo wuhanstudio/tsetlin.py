@@ -129,7 +129,7 @@ class Tsetlin:
                 self.step(X[i], y[i], T=T, s=s)
 
     @staticmethod
-    def load_model(path, threshold=-1):
+    def load_model(path):
         import tsetlin_pb2
         tm = tsetlin_pb2.Tsetlin()
 
@@ -168,6 +168,119 @@ class Tsetlin:
                     neg_clause.n_trainable_literals = n_clause_c.position[n_clause_c.n_pos_literal:]
 
                     neg_clause.set_compressed_state(n_clause_c.n_pos_literal, n_clause_c.n_neg_literal, n_clause_c.position, n_clause_c.data)
+                    neg_clauses.append(neg_clause)
+
+                tm_model.pos_clauses.append(pos_clauses)
+                tm_model.neg_clauses.append(neg_clauses)
+
+        elif tm.model_type == tsetlin_pb2.ModelType.COMPRESSED_OFFSET:
+            from itertools import accumulate
+
+            tm_model.pos_clauses = []
+            tm_model.neg_clauses = []
+            for i in range(tm_model.n_classes):
+                pos_clauses = []
+                neg_clauses = []
+                for j in range(tm_model.n_clauses // 2):
+                    p_clause_c = tm.clauses_compressed_offset[i * tm_model.n_clauses + j * 2]
+                    n_clause_c = tm.clauses_compressed_offset[i * tm_model.n_clauses + j * 2 + 1]
+
+                    # Set positive clauses
+                    pos_clause = Clause(tm_model.n_features, tm_model.n_states)
+
+                    pos_positions = list(accumulate(p_clause_c.offset[:p_clause_c.n_pos_literal]))
+                    neg_positions = list(accumulate(p_clause_c.offset[p_clause_c.n_pos_literal:]))
+
+                    pos_clause.p_trainable_literals = pos_positions
+                    pos_clause.n_trainable_literals = neg_positions
+
+                    pos_clause.set_compressed_state(p_clause_c.n_pos_literal, p_clause_c.n_neg_literal, pos_positions + neg_positions, p_clause_c.data)
+                    pos_clauses.append(pos_clause)
+
+                    # Set negative clauses
+                    neg_clause = Clause(tm_model.n_features, tm_model.n_states)
+
+                    pos_positions = list(accumulate(n_clause_c.offset[:n_clause_c.n_pos_literal]))
+                    neg_positions = list(accumulate(n_clause_c.offset[n_clause_c.n_pos_literal:]))
+                    neg_clause.p_trainable_literals = pos_positions
+                    neg_clause.n_trainable_literals = neg_positions
+
+                    neg_clause.set_compressed_state(n_clause_c.n_pos_literal, n_clause_c.n_neg_literal, pos_positions + neg_positions, n_clause_c.data)
+                    neg_clauses.append(neg_clause)
+
+                tm_model.pos_clauses.append(pos_clauses)
+                tm_model.neg_clauses.append(neg_clauses)
+        
+        elif tm.model_type == tsetlin_pb2.ModelType.COMPRESSED_BITPACK:
+            tm_model.pos_clauses = []
+            tm_model.neg_clauses = []
+            for i in range(tm_model.n_classes):
+                pos_clauses = []
+                neg_clauses = []
+                for j in range(tm_model.n_clauses // 2):
+                    p_clause_c = tm.clauses_compressed_bitpack[i * tm_model.n_clauses + j * 2]
+                    n_clause_c = tm.clauses_compressed_bitpack[i * tm_model.n_clauses + j * 2 + 1]
+
+                    # Set positive clauses
+                    pos_clause = Clause(tm_model.n_features, tm_model.n_states)
+
+                    n_pos_literal = p_clause_c.n_literal & 0xFFFF
+                    n_neg_literal = (p_clause_c.n_literal >> 16) & 0xFFFF
+
+                    states = []
+                    positions = []
+                    pos_clause.p_trainable_literals = []
+                    for k in range(n_pos_literal):
+                        packed = p_clause_c.data[k]
+
+                        position = (packed >> 16) & 0xFFFF
+                        pos_clause.p_trainable_literals.append(position)
+
+                        positions.append(position)
+                        states.append(packed & 0xFFFF)
+
+                    pos_clause.n_trainable_literals = []
+                    for k in range(n_neg_literal):
+                        packed = p_clause_c.data[k + n_pos_literal]
+
+                        position = (packed >> 16) & 0xFFFF
+                        pos_clause.n_trainable_literals.append(position)
+
+                        positions.append(position)
+                        states.append(packed & 0xFFFF)
+
+                    pos_clause.set_compressed_state(n_pos_literal, n_neg_literal, positions, states)
+                    pos_clauses.append(pos_clause)
+
+                    # Set negative clauses
+                    neg_clause = Clause(tm_model.n_features, tm_model.n_states)
+                    n_pos_literal = n_clause_c.n_literal & 0xFFFF
+                    n_neg_literal = (n_clause_c.n_literal >> 16) & 0xFFFF
+
+
+                    states = []
+                    positions = []
+                    neg_clause.p_trainable_literals = []
+                    for k in range(n_pos_literal):
+                        packed = n_clause_c.data[k]
+
+                        position = (packed >> 16) & 0xFFFF
+                        neg_clause.p_trainable_literals.append(position)
+
+                        positions.append(position)
+                        states.append(packed & 0xFFFF)
+
+                    neg_clause.n_trainable_literals = []
+                    for k in range(n_neg_literal):
+                        packed = n_clause_c.data[k + n_pos_literal]
+
+                        position = (packed >> 16) & 0xFFFF
+                        neg_clause.n_trainable_literals.append(position)
+
+                        positions.append(position)
+                        states.append(packed & 0xFFFF)
+    
+                    neg_clause.set_compressed_state(n_pos_literal, n_neg_literal, positions, states)
                     neg_clauses.append(neg_clause)
 
                 tm_model.pos_clauses.append(pos_clauses)
@@ -240,7 +353,7 @@ class Tsetlin:
 
         return tm_model
 
-    def save_model(self, path, type="training", retrain=False):
+    def save_model(self, path, type="training"):
         import tsetlin_pb2
         tm = tsetlin_pb2.Tsetlin()
 
@@ -249,33 +362,37 @@ class Tsetlin:
         tm.n_clause = self.n_clauses
         tm.n_state = self.n_states
 
-        if type not in ["training", "inference", "compressed"]:
-            raise ValueError("type must be either 'training', 'inference', or 'compressed'")
+        if type not in ["training", "inference", "compressed", "compressed_offset", "compressed_bitpack"]:
+            raise ValueError("type must be either 'training', 'inference', 'compressed', 'compressed_offset', or 'compressed_bitpack'")
 
         if type == "training":
             tm.model_type = tsetlin_pb2.ModelType.TRAINING
         elif type == "inference":
             tm.model_type = tsetlin_pb2.ModelType.INFERENCE
-        else:
+        elif type == "compressed":
             tm.model_type = tsetlin_pb2.ModelType.COMPRESSED
+        elif type == "compressed_offset":
+            tm.model_type = tsetlin_pb2.ModelType.COMPRESSED_OFFSET
+        elif type == "compressed_bitpack":
+            tm.model_type = tsetlin_pb2.ModelType.COMPRESSED_BITPACK
 
         for i in range(self.n_classes):
             for j in range(self.n_clauses // 2):
                 if type == "compressed":
+                    import numpy as np
+
                     # Compress clause before saving
                     pos_c = tsetlin_pb2.ClauseCompressed()
                     pos_c.n_pos_literal = len(self.pos_clauses[i][j].p_trainable_literals)
                     pos_c.n_neg_literal = len(self.pos_clauses[i][j].n_trainable_literals)
 
-                    pos_c.n_state = self.n_states
+                    pos_positions = [to_int32(x) for x in self.pos_clauses[i][j].p_trainable_literals]
+                    pos_c.position.extend(pos_positions)
 
-                    pos_c.position.extend([to_int32(x) for x in self.pos_clauses[i][j].p_trainable_literals])
-                    pos_c.position.extend([to_int32(x) for x in self.pos_clauses[i][j].n_trainable_literals])
+                    neg_positions = [to_int32(x) for x in self.pos_clauses[i][j].n_trainable_literals]
+                    pos_c.position.extend(neg_positions)
 
-                    if retrain:
-                        pos_c.data.extend([to_int32(self.n_states // 2) for x in self.pos_clauses[i][j].get_compressed_state()])
-                    else:
-                        pos_c.data.extend([to_int32(x) for x in self.pos_clauses[i][j].get_compressed_state()])
+                    pos_c.data.extend([to_int32(x) for x in self.pos_clauses[i][j].get_compressed_state()])
 
                     tm.clauses_compressed.append(pos_c)
 
@@ -284,33 +401,110 @@ class Tsetlin:
                     neg_c.n_pos_literal = len(self.neg_clauses[i][j].p_trainable_literals)
                     neg_c.n_neg_literal = len(self.neg_clauses[i][j].n_trainable_literals)
 
-                    neg_c.n_state = self.n_states
+                    pos_positions = [to_int32(x) for x in self.neg_clauses[i][j].p_trainable_literals]
+                    neg_c.position.extend(pos_positions)
 
-                    neg_c.position.extend([to_int32(x) for x in self.neg_clauses[i][j].p_trainable_literals])
-                    neg_c.position.extend([to_int32(x) for x in self.neg_clauses[i][j].n_trainable_literals])
+                    neg_positions = [to_int32(x) for x in self.neg_clauses[i][j].n_trainable_literals]
+                    neg_c.position.extend(neg_positions)
 
-                    if retrain:
-                        neg_c.data.extend([to_int32(self.n_states // 2) for x in self.neg_clauses[i][j].get_compressed_state()])
-                    else:
-                        neg_c.data.extend([to_int32(x) for x in self.neg_clauses[i][j].get_compressed_state()])
+                    neg_c.data.extend([to_int32(x) for x in self.neg_clauses[i][j].get_compressed_state()])
 
                     tm.clauses_compressed.append(neg_c)
+
+                elif type == "compressed_offset":
+                    import numpy as np
+
+                    # Compress clause before saving
+                    pos_c = tsetlin_pb2.ClauseCompressedOffset()
+                    pos_c.n_pos_literal = len(self.pos_clauses[i][j].p_trainable_literals)
+                    pos_c.n_neg_literal = len(self.pos_clauses[i][j].n_trainable_literals)
+
+                    pos_positions = [to_int32(x) for x in self.pos_clauses[i][j].p_trainable_literals]
+                    pos_offsets = np.diff(pos_positions, prepend=0)
+                    pos_c.offset.extend(pos_offsets)
+
+                    neg_c_positions = [to_int32(x) for x in self.pos_clauses[i][j].n_trainable_literals]
+                    neg_offsets = np.diff(neg_c_positions, prepend=0)
+                    pos_c.offset.extend(neg_offsets)
+
+                    pos_c.data.extend([to_int32(x) for x in self.pos_clauses[i][j].get_compressed_state()])
+
+                    tm.clauses_compressed_offset.append(pos_c)
+
+                    # Negative clauses
+                    neg_c = tsetlin_pb2.ClauseCompressedOffset()
+                    neg_c.n_pos_literal = len(self.neg_clauses[i][j].p_trainable_literals)
+                    neg_c.n_neg_literal = len(self.neg_clauses[i][j].n_trainable_literals)
+
+                    pos_positions = [to_int32(x) for x in self.neg_clauses[i][j].p_trainable_literals]
+                    pos_offsets = np.diff(pos_positions, prepend=0)
+                    neg_c.offset.extend(pos_offsets)
+
+                    neg_positions = [to_int32(x) for x in self.neg_clauses[i][j].n_trainable_literals]
+                    neg_offsets = np.diff(neg_positions, prepend=0)
+                    neg_c.offset.extend(neg_offsets)
+
+                    neg_c.data.extend([to_int32(x) for x in self.neg_clauses[i][j].get_compressed_state()])
+
+                    tm.clauses_compressed_offset.append(neg_c)
+
+                elif type == "compressed_bitpack":
+                    # Compress clause before saving
+                    pos_c = tsetlin_pb2.ClauseCompressedBitpack()
+
+                    # Convert to 16-bit packed format
+                    n_pos_literal = len(self.pos_clauses[i][j].p_trainable_literals)
+                    n_neg_literal = len(self.pos_clauses[i][j].n_trainable_literals)
+                    pos_c.n_literal = (n_neg_literal << 16) | n_pos_literal
+
+                    p_positions = [to_int32(x) for x in self.pos_clauses[i][j].p_trainable_literals]
+                    n_positions = [to_int32(x) for x in self.pos_clauses[i][j].n_trainable_literals]
+
+                    p_states = [to_int32(x) for x in self.pos_clauses[i][j].get_compressed_state()]
+
+                    # Pack position and state into single 32-bit integers
+                    for k in range(n_pos_literal):
+                        packed = (p_positions[k] << 16) | (p_states[k] & 0xFFFF)
+                        pos_c.data.append(packed)
+                    
+                    for k in range(n_neg_literal):
+                        packed = (n_positions[k] << 16) | (p_states[k + n_pos_literal] & 0xFFFF)
+                        pos_c.data.append(packed)
+
+                    tm.clauses_compressed_bitpack.append(pos_c)
+
+                    # Negative clauses
+                    neg_c = tsetlin_pb2.ClauseCompressedBitpack()
+
+                    # Convert to 16-bit packed format
+                    n_pos_literal = len(self.neg_clauses[i][j].p_trainable_literals)
+                    n_neg_literal = len(self.neg_clauses[i][j].n_trainable_literals)
+                    neg_c.n_literal = (n_neg_literal << 16) | n_pos_literal
+
+                    p_positions = [to_int32(x) for x in self.neg_clauses[i][j].p_trainable_literals]
+                    n_positions = [to_int32(x) for x in self.neg_clauses[i][j].n_trainable_literals]
+                    n_states = [to_int32(x) for x in self.neg_clauses[i][j].get_compressed_state()]
+
+                    # Pack position and state into single 32-bit integers
+                    for k in range(n_pos_literal):
+                        packed = (p_positions[k] << 16) | (n_states[k] & 0xFFFF)
+                        neg_c.data.append(packed)
+
+                    for k in range(n_neg_literal):
+                        packed = (n_positions[k] << 16) | (n_states[k + n_pos_literal] & 0xFFFF)
+                        neg_c.data.append(packed)
+
+                    tm.clauses_compressed_bitpack.append(neg_c)
 
                 else:
                     # Positive clauses
                     pos_c = tsetlin_pb2.Clause()
-                    pos_c.n_feature = self.n_features
-                    pos_c.n_state = self.n_states
-
                     pos_c.data.extend([to_int32(x) for x in self.pos_clauses[i][j].get_state()])
 
                     tm.clauses.append(pos_c)
 
                     # Negative clauses
                     neg_c = tsetlin_pb2.Clause()
-                    neg_c.n_feature = self.n_features
-                    neg_c.n_state = self.n_states
-
                     neg_c.data.extend([to_int32(x) for x in self.neg_clauses[i][j].get_state()])
 
                     tm.clauses.append(neg_c)
